@@ -1,0 +1,26 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16.1
+    restart: unless-stopped
+    container_name: hackathon-server-postgres
+    environment:
+      - POSTGRES_USER=hackathon
+      - POSTGRES_DB=hackathon
+      - POSTGRES_PASSWORD=123
+    ports:
+      - 5436:5432 # change left one if already used
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hackathon-server-app
+    restart: unless-stopped
+    env_file:
+      - app/.env
+    ports:
+      - 8000:8000
+    depends_on:
+      - db
