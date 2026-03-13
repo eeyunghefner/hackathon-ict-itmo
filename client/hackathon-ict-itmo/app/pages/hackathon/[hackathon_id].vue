@@ -22,5 +22,5 @@ const id = route.params.hackathon_id as string
 
 const hackathon = hackathonStore.getHackathonById(id)
 
-const events = hackathonStore.getScheduleByHackathonId(id)
+const events = hackathonStore.getSchedule(id)
 </script>
