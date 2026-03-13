@@ -4,7 +4,7 @@
 
     <h1>Мои хакатоны</h1>
 
-    <HackathonTable :hackathons="hackathonStore.hackathons" />
+    <HackathonTable :hackathons="hackathons" />
   </div>
 </template>
 
@@ -14,4 +14,6 @@ import HackathonTable from "~/components/HackathonTable.vue"
 import { useHackathonStore } from "~/stores/hackathonStore"
 
 const hackathonStore = useHackathonStore()
+
+const hackathons = hackathonStore.getHackathons
 </script>
