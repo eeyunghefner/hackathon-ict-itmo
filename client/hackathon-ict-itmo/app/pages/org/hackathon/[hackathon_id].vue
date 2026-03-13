@@ -3,9 +3,9 @@
     <h1>Редактирование хакатона</h1>
 
     <div>
-      <Button @click="tab = 'info'" variant="secondary">Общая информация</Button>
-      <Button @click="tab = 'participants'" variant="secondary">Участники</Button>
-      <Button @click="tab = 'applications'" variant="secondary">Заявки</Button>
+      <Button @click="tab = 'info'" variant="secondary" class="right-margin">Общая информация</Button>
+      <Button @click="tab = 'participants'" variant="secondary" class="right-margin">Участники</Button>
+      <Button @click="tab = 'applications'" variant="secondary" class="right-margin">Заявки</Button>
     </div>
 
     <Card v-if="tab === 'info'">
@@ -68,3 +68,9 @@ function toggle() {
   store.togglePublication(id)
 }
 </script>
+
+<style>
+.right-margin {
+    margin-right: 1.5rem;
+}
+</style>

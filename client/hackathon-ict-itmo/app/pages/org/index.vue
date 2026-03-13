@@ -34,7 +34,7 @@ const hackathons = store.getOrganizerHackathons('1')
 
 // Функция перехода по кликнутой строке таблицы
 function goToHackathon(row: string[]) {
-  const hackathon = store.hackathons.find(h => h.name === row[0])
+  const hackathon = hackathons.find(h => h.name === row[0])
   if (hackathon) router.push(`/org/hackathon/${hackathon.id}`)
 }
 </script>
