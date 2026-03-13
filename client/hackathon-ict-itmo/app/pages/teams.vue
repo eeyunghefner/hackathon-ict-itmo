@@ -1,7 +1,5 @@
 <template>
   <div>
-    <Navbar />
-
     <h1>Поиск команд</h1>
 
     <input v-model="search" placeholder="Поиск команды" />

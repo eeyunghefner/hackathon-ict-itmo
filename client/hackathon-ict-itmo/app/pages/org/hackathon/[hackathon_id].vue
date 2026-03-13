@@ -1,8 +1,5 @@
 <template>
   <div>
-
-    <OrgNavbar />
-
     <h1>Редактирование хакатона</h1>
 
     <div>

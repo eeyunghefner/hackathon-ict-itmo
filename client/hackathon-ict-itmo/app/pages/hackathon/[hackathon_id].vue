@@ -1,7 +1,5 @@
 <template>
   <div>
-    <Navbar />
-
     <h1>{{ hackathon?.name }}</h1>
 
     <ScheduleTable :events="events" />

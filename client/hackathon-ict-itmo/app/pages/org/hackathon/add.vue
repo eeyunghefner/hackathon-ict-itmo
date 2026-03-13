@@ -1,8 +1,6 @@
 <template>
   <div>
 
-    <OrgNavbar />
-
     <h1>Создание хакатона</h1>
 
     <input v-model="hackathon.name" placeholder="Название" />

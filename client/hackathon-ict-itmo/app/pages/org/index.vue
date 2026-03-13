@@ -1,8 +1,6 @@
 <template>
   <div>
 
-    <OrgNavbar />
-
     <h1>Мои хакатоны</h1>
 
     <NuxtLink to="/org/hackathon/add">

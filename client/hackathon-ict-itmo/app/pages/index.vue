@@ -1,7 +1,5 @@
 <template>
   <div>
-    <Navbar />
-
     <h1>Мои хакатоны</h1>
 
     <HackathonTable :hackathons="hackathons" />
