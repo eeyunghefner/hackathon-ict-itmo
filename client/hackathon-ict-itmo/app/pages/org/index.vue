@@ -1,54 +1,40 @@
 <template>
   <div>
+    <Card>
+      <h1>Мои хакатоны</h1>
 
-    <h1>Мои хакатоны</h1>
+      <NuxtLink to="/org/hackathon/add">
+        <Button variant="primary">Добавить хакатон</Button>
+      </NuxtLink>
+    </Card>
 
-    <NuxtLink to="/org/hackathon/add">
-      <button>Добавить хакатон</button>
-    </NuxtLink>
-
-    <table>
-
-      <thead>
-        <tr>
-          <th>Название</th>
-          <th>Тематика</th>
-          <th>Формат</th>
-        </tr>
-      </thead>
-
-      <tbody>
-
-        <tr
-          v-for="hackathon in hackathons"
-          :key="hackathon.id"
-          @click="goToHackathon(hackathon.id)"
-        >
-          <td>{{ hackathon.name }}</td>
-          <td>{{ hackathon.theme }}</td>
-          <td>{{ hackathon.format }}</td>
-        </tr>
-
-      </tbody>
-
-    </table>
-
+    <Card>
+      <Table
+        :headers="['Название', 'Тематика', 'Формат']"
+        :rows="hackathons.map(h => [h.name, h.theme, h.format])"
+        @row-click="goToHackathon"
+      />
+    </Card>
   </div>
 </template>
 
 <script setup lang="ts">
-
-import { useHackathonStore } from "~/stores/hackathonStore"
-import OrgNavbar from "~/components/OrgNavbar.vue"
+import { useRouter } from 'vue-router'
+import { useHackathonStore } from '~/stores/hackathonStore'
+import Card from '~/components/ui/Card.vue'
+import Table from '~/components/ui/Table.vue'
+import Button from '~/components/ui/Button.vue'
+import { NuxtLink } from '#components'
 
 const store = useHackathonStore()
-
-const hackathons = store.getOrganizerHackathons("1")
-
 const router = useRouter()
 
-function goToHackathon(id: string) {
-  router.push(`/org/hackathon/${id}`)
-}
+// Получаем все хакатоны организатора с id "1" (захардкожено)
+const hackathons = store.getOrganizerHackathons('1')
 
+// Функция перехода по кликнутой строке таблицы
+function goToHackathon(row: string[]) {
+  const hackathon = store.hackathons.find(h => h.name === row[0])
+  if (hackathon) router.push(`/org/hackathon/${hackathon.id}`)
+}
 </script>

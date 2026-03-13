@@ -1,24 +1,24 @@
 <template>
-  <div>
+  <Card>
     <h1>Поиск команд</h1>
+    <FormField label="Поиск" v-model="query" type="input" />
+  </Card>
 
-    <input v-model="search" placeholder="Поиск команды" />
-
-    <TeamTable :teams="filteredTeams" />
-  </div>
+  <Table
+    :headers="['Команда', 'Количество участников', 'Действие']"
+    :rows="teams.map(t => [t.name, t.members, 'Подать заявку'])"
+  />
 </template>
 
 <script setup lang="ts">
-import Navbar from "~/components/Navbar.vue"
-import TeamTable from "~/components/TeamTable.vue"
-import { useTeamStore } from "~/stores/teamStore"
-import { ref, computed } from "vue"
+import { ref } from 'vue'
+import { useTeamStore } from '~/stores/teamStore'
+import Card from '~/components/ui/Card.vue'
+import Table from '~/components/ui/Table.vue'
+import FormField from '~/components/ui/FormField.vue'
 
-const teamStore = useTeamStore()
+const query = ref('')
+const store = useTeamStore()
 
-const search = ref("")
-
-const filteredTeams = computed(() =>
-  teamStore.searchTeams(search.value)
-)
+const teams = store.getTeams
 </script>

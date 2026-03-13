@@ -1,135 +1,70 @@
 <template>
-  <div>
+  <Card>
     <h1>Редактирование хакатона</h1>
 
     <div>
-
-      <button @click="tab = 'info'">Общая информация</button>
-      <button @click="tab = 'participants'">Участники</button>
-      <button @click="tab = 'applications'">Заявки</button>
-
+      <Button @click="tab = 'info'" variant="secondary">Общая информация</Button>
+      <Button @click="tab = 'participants'" variant="secondary">Участники</Button>
+      <Button @click="tab = 'applications'" variant="secondary">Заявки</Button>
     </div>
 
-    <div v-if="tab === 'info'">
+    <Card v-if="tab === 'info'">
+      <FormField label="Название" v-model="hackathon.name" type="input" />
+      <FormField label="Тематика" v-model="hackathon.theme" type="input" />
+      <FormField label="Формат" v-model="hackathon.format" type="input" />
+      <FormField label="Описание" v-model="hackathon.description" type="textarea" />
+      <FormField label="Лимит участников" v-model="hackathon.participantLimit" type="input" />
+      <FormField label="Лимит команд" v-model="hackathon.teamLimit" type="input" />
+      <FormField label="Регламент" v-model="hackathon.regulations" type="textarea" />
 
-      <input v-model="hackathon.name" />
-      <input v-model="hackathon.theme" />
-      <input v-model="hackathon.format" />
-
-      <textarea v-model="hackathon.description"></textarea>
-
-      <input type="number" v-model="hackathon.participantLimit" />
-      <input type="number" v-model="hackathon.teamLimit" />
-
-      <textarea v-model="hackathon.regulations"></textarea>
-
-      <button @click="toggle">
-        {{ hackathon.published ? "Снять с публикации" : "Опубликовать" }}
-      </button>
+      <Button @click="toggle" variant="primary">
+        {{ hackathon.published ? 'Снять с публикации' : 'Опубликовать' }}
+      </Button>
 
       <h3>Расписание</h3>
+      <Table
+        :headers="['Событие', 'Время', 'Действие']"
+        :rows="events.map(e => [e.name, e.time, 'Удалить'])"
+      />
+    </Card>
 
-      <table>
-        <tr v-for="event in events" :key="event.id">
-          <td>{{ event.name }}</td>
-          <td>{{ event.time }}</td>
-          <td>
-            <button @click="removeEvent(event.id)">Удалить</button>
-          </td>
-        </tr>
-      </table>
+    <Card v-if="tab === 'participants'">
+      <Table
+        :headers="['Команда', 'Участники']"
+        :rows="registrations.map(r => [r.teamName, r.members.map(m => m.name).join(', ')])"
+      />
+    </Card>
 
-      <input v-model="newEvent.name" placeholder="Название события" />
-      <input v-model="newEvent.time" placeholder="Время" />
-
-      <button @click="addEvent">Добавить событие</button>
-
-    </div>
-
-    <div v-if="tab === 'participants'">
-
-      <table>
-
-        <tr v-for="team in registrations" :key="team.id">
-          <td>{{ team.teamName }}</td>
-
-          <td>
-            <div v-for="member in team.members" :key="member.id">
-              {{ member.name }}
-            </div>
-          </td>
-
-        </tr>
-
-      </table>
-
-    </div>
-
-    <div v-if="tab === 'applications'">
-
-      <table>
-
-        <tr v-for="team in applications" :key="team.id">
-
-          <td>{{ team.teamName }}</td>
-
-          <td>
-            <div v-for="member in team.members" :key="member.id">
-              {{ member.name }}
-            </div>
-          </td>
-
-        </tr>
-
-      </table>
-
-    </div>
-
-  </div>
+    <Card v-if="tab === 'applications'">
+      <Table
+        :headers="['Команда', 'Участники']"
+        :rows="applications.map(a => [a.teamName, a.members.map(m => m.name).join(', ')])"
+      />
+    </Card>
+  </Card>
 </template>
 
 <script setup lang="ts">
-
-import OrgNavbar from "~/components/OrgNavbar.vue"
-import { useHackathonStore } from "~/stores/hackathonStore"
+import { ref, reactive } from 'vue'
+import { useRoute } from 'vue-router'
+import { useHackathonStore } from '~/stores/hackathonStore'
+import Card from '~/components/ui/Card.vue'
+import Table from '~/components/ui/Table.vue'
+import FormField from '~/components/ui/FormField.vue'
+import Button from '~/components/ui/Button.vue'
 
 const route = useRoute()
-
 const store = useHackathonStore()
-
 const id = route.params.hackathon_id as string
 
 const hackathon = reactive({ ...store.getHackathonById(id)! })
-
 const events = store.getSchedule(id)
-
 const registrations = store.getRegistrations(id)
-
 const applications = store.getApplications(id)
 
-const tab = ref("info")
-
-const newEvent = ref({
-  name: "",
-  time: ""
-})
+const tab = ref('info')
 
 function toggle() {
   store.togglePublication(id)
 }
-
-function addEvent() {
-
-  store.addEvent(id, {
-    id: Date.now().toString(),
-    name: newEvent.value.name,
-    time: newEvent.value.time
-  })
-
-}
-
-function removeEvent(eventId: string) {
-  store.removeEvent(id, eventId)
-}
-
 </script>

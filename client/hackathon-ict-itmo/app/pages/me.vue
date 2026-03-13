@@ -1,40 +1,27 @@
 <template>
-  <div>
+  <Card>
     <h1>Личный кабинет</h1>
 
-    <div>
-      <label>ФИО</label>
-      <input v-model="user.fullName" />
-    </div>
+    <FormField label="ФИО" v-model="user.fullName" type="input" />
+    <FormField label="Образование" v-model="user.education" type="input" />
+    <FormField label="Навыки" v-model="user.skills" type="input" />
+    <FormField label="Описание" v-model="user.description" type="textarea" />
 
-    <div>
-      <label>Образование</label>
-      <input v-model="user.education" />
-    </div>
-
-    <div>
-      <label>Навыки</label>
-      <input v-model="user.skills" />
-    </div>
-
-    <div>
-      <label>Описание</label>
-      <textarea v-model="user.description"></textarea>
-    </div>
-
-    <button @click="save">Сохранить</button>
-  </div>
+    <Button @click="save" variant="primary">Сохранить</Button>
+  </Card>
 </template>
 
 <script setup lang="ts">
-import Navbar from "~/components/Navbar.vue"
-import { useUserStore } from "~/stores/userStore"
+import { useUserStore } from '~/stores/userStore'
+import FormField from '~/components/ui/FormField.vue'
+import Card from '~/components/ui/Card.vue'
+import Button from '~/components/ui/Button.vue'
 
-const userStore = useUserStore()
-
-const user = userStore.user
+const store = useUserStore()
+const user = store.getUser
 
 function save() {
-  userStore.updateUser(user)
+  store.updateUser(user)
+  alert('Сохранено!')
 }
 </script>
