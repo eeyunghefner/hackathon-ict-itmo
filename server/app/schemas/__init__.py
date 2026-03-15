@@ -26,7 +26,7 @@ from .room import (
 )
 from .team import CreateTeamRequest, TeamMemberResponse, TeamResponse
 from .team_request import TeamJoinRequestResponse, UpdateTeamCaptainRequest
-from .user import UpdateUserProfileRequest, UserMeResponse
+from .user import UpdateUserProfileRequest, UserMeResponse, UserStatusResponse
 
 __all__ = [
     "AuthUserResponse",
@@ -60,4 +60,5 @@ __all__ = [
     "UpdateUserProfileRequest",
     "UpdateHackathonRequest",
     "UserMeResponse",
+    "UserStatusResponse",
 ]

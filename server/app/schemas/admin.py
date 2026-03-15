@@ -6,7 +6,7 @@ class AdminUserResponse(BaseModel):
     firstName: str
     lastName: str
     email: str
-    role: str
+    roles: list[str]
     university: str | None = None
 
 

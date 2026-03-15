@@ -2,8 +2,9 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
-from app.models import AuthorizationDetails, Role, TeamMember, User
+from app.models import AuthorizationDetails, TeamMember, User, UserRole
 
 
 @dataclass(slots=True)
@@ -11,7 +12,7 @@ class UserProfileRecord:
     id: int
     full_name: str
     email: str
-    role_name: str
+    role_names: list[str]
     university: str | None
     team_id: int | None
 
@@ -20,7 +21,7 @@ class UserProfileRecord:
 class AuthUserRecord:
     id: int
     email: str
-    role_name: str
+    role_names: list[str]
     password_hash: str
 
 
@@ -28,68 +29,77 @@ async def get_user_profile_by_id(
     session: AsyncSession,
     user_id: int,
 ) -> UserProfileRecord | None:
-    statement = (
-        select(
-            User.id,
-            User.full_name,
-            User.email,
-            Role.name.label("role_name"),
-            User.university,
-            TeamMember.team_id,
-        )
-        .join(Role, User.role_id == Role.id)
-        .outerjoin(TeamMember, TeamMember.user_id == User.id)
+    result = await session.execute(
+        select(User)
+        .options(selectinload(User.roles_association))
         .where(User.id == user_id)
+    )
+    user = result.scalar_one_or_none()
+    if user is None:
+        return None
+
+    team_result = await session.execute(
+        select(TeamMember.team_id)
+        .where(TeamMember.user_id == user_id)
         .order_by(TeamMember.joined_at.asc())
         .limit(1)
     )
-    row = (await session.execute(statement)).first()
-
-    if row is None:
-        return None
+    team_id = team_result.scalar_one_or_none()
 
     return UserProfileRecord(
-        id=row.id,
-        full_name=row.full_name,
-        email=row.email,
-        role_name=row.role_name,
-        university=row.university,
-        team_id=row.team_id,
+        id=user.id,
+        full_name=user.full_name,
+        email=user.email,
+        role_names=[r.name for r in user.roles_association],
+        university=user.university,
+        team_id=team_id,
     )
+
+
+async def get_user_by_isu_number(
+    session: AsyncSession,
+    isu_number: int,
+) -> User | None:
+    result = await session.execute(
+        select(User)
+        .options(selectinload(User.roles_association))
+        .where(User.isu_number == isu_number)
+    )
+    return result.scalar_one_or_none()
 
 
 async def get_auth_user_by_email(
     session: AsyncSession,
     email: str,
 ) -> AuthUserRecord | None:
-    statement = (
-        select(
-            User.id,
-            User.email,
-            Role.name.label("role_name"),
-            AuthorizationDetails.password_hash,
-        )
-        .join(Role, User.role_id == Role.id)
-        .join(
-            AuthorizationDetails,
-            User.authorization_details_id == AuthorizationDetails.id,
-        )
+    result = await session.execute(
+        select(User)
+        .options(selectinload(User.roles_association))
         .where(User.email == email)
     )
-    row = (await session.execute(statement)).first()
+    user = result.scalar_one_or_none()
+    if user is None:
+        return None
 
-    if row is None:
+    auth_result = await session.execute(
+        select(AuthorizationDetails.password_hash).where(
+            AuthorizationDetails.id == user.authorization_details_id
+        )
+    )
+    password_hash = auth_result.scalar_one_or_none()
+    if password_hash is None:
         return None
 
     return AuthUserRecord(
-        id=row.id,
-        email=row.email,
-        role_name=row.role_name,
-        password_hash=row.password_hash,
+        id=user.id,
+        email=user.email,
+        role_names=[r.name for r in user.roles_association],
+        password_hash=password_hash,
     )
 
 
-async def get_role_by_name(session: AsyncSession, name: str) -> Role | None:
+async def get_role_by_name(session: AsyncSession, name: str):
+    from app.models import Role
     statement = select(Role).where(Role.name == name)
     return await session.scalar(statement)
 
@@ -97,6 +107,7 @@ async def get_role_by_name(session: AsyncSession, name: str) -> Role | None:
 async def create_user_with_password(
     session: AsyncSession,
     *,
+    isu_number: int,
     email: str,
     full_name: str,
     university: str,
@@ -108,15 +119,19 @@ async def create_user_with_password(
     await session.flush()
 
     user = User(
+        isu_number=isu_number,
         email=email,
         full_name=full_name,
         university=university,
         phone=None,
-        role_id=role_id,
         authorization_details_id=authorization_details.id,
     )
     session.add(user)
     await session.flush()
+
+    session.add(UserRole(user_id=user.id, role_id=role_id))
+    await session.flush()
+
     return user
 
 
