@@ -1,10 +1,7 @@
-from fastapi import FastAPI
-from .routers import router
-
-from contextlib import asynccontextmanager
 import dotenv
-from pathlib import Path
-import os
+from fastapi import FastAPI
+
+from .routers import router
 
 dotenv.load_dotenv()
 
