@@ -6,7 +6,7 @@ class UserMeResponse(BaseModel):
     firstName: str
     lastName: str
     email: EmailStr
-    role: str
+    roles: list[str]
     university: str | None = None
     teamId: str | None = None
 
@@ -15,3 +15,10 @@ class UpdateUserProfileRequest(BaseModel):
     firstName: str = Field(min_length=1, max_length=100)
     lastName: str = Field(min_length=1, max_length=100)
     university: str = Field(min_length=1, max_length=255)
+
+
+class UserStatusResponse(BaseModel):
+    is_admin: bool
+    is_organizer: bool
+    is_captain: bool
+    is_attendee: bool

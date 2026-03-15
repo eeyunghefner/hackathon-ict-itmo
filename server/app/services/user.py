@@ -1,8 +1,10 @@
 from fastapi import HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.repositories import get_user_profile_by_id, update_user_profile
-from app.schemas import UpdateUserProfileRequest, UserMeResponse
+from app.models import Team
+from app.repositories import get_user_by_isu_number, get_user_profile_by_id, update_user_profile
+from app.schemas import UpdateUserProfileRequest, UserMeResponse, UserStatusResponse
 
 
 def split_full_name(full_name: str) -> tuple[str, str]:
@@ -35,7 +37,7 @@ async def get_current_user_profile(
         firstName=first_name,
         lastName=last_name,
         email=user.email,
-        role=user.role_name,
+        roles=user.role_names,
         university=user.university,
         teamId=str(user.team_id) if user.team_id is not None else None,
     )
@@ -62,3 +64,30 @@ async def update_current_user_profile(
 
     await session.commit()
     return await get_current_user_profile(session, user_id)
+
+
+async def get_user_status(
+    session: AsyncSession,
+    isu_number: int,
+) -> UserStatusResponse:
+    user = await get_user_by_isu_number(session, isu_number)
+
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    role_names = {r.name for r in user.roles_association}
+
+    captain_result = await session.execute(
+        select(Team.id).where(Team.captain_id == user.id).limit(1)
+    )
+    is_captain = captain_result.scalar_one_or_none() is not None
+
+    return UserStatusResponse(
+        is_admin="admin" in role_names,
+        is_organizer="organizer" in role_names,
+        is_captain=is_captain,
+        is_attendee="participant" in role_names,
+    )
