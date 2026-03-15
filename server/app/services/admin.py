@@ -10,6 +10,7 @@ from app.repositories import (
     get_user_with_role_for_admin,
     list_hackathon_history,
     list_users_for_admin,
+    set_user_roles,
 )
 from app.schemas import (
     AdminHackathonHistoryItemResponse,
@@ -29,7 +30,7 @@ def _map_admin_user(record) -> AdminUserResponse:
         firstName=first_name,
         lastName=last_name,
         email=record.email,
-        role=record.role_name,
+        roles=record.role_names,
         university=record.university,
     )
 
@@ -42,7 +43,7 @@ async def _require_admin(session: AsyncSession, user_id: int) -> None:
             detail="User not found",
         )
 
-    if user.role_name != ADMIN_ROLE:
+    if ADMIN_ROLE not in user.role_names:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access is required",
@@ -118,7 +119,7 @@ async def update_admin_user(
             detail="Role not found",
         )
 
-    user.role_id = role.id
+    await set_user_roles(session, user_id=user.id, role_id=role.id)
     await session.commit()
 
     updated_user = await get_user_with_role_for_admin(session, user_id)

@@ -4,6 +4,7 @@ from .admin import (
     get_user_model_by_id,
     get_user_with_role_for_admin,
     list_users_for_admin,
+    set_user_roles,
 )
 from .application import (
     ApplicationRecord,
@@ -59,6 +60,7 @@ from .user import (
     create_user_with_password,
     get_auth_user_by_email,
     get_role_by_name,
+    get_user_by_isu_number,
     get_user_profile_by_id,
     update_user_profile,
 )
@@ -123,10 +125,12 @@ __all__ = [
     "get_team_request_by_id",
     "get_team_request_by_team_and_user",
     "get_team_request_model_by_id",
+    "get_user_by_isu_number",
     "get_user_profile_by_id",
     "get_user_model_by_id",
     "get_user_with_role_for_admin",
     "has_booking_conflict",
+    "set_user_roles",
     "has_event_room_conflict",
     "list_applications_by_hackathon",
     "list_event_slots_by_date",

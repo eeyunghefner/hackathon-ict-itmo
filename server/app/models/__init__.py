@@ -10,6 +10,7 @@ from .team import Team
 from .team_member import TeamMember
 from .team_request import TeamRequest
 from .user import User
+from .user_role import UserRole
 
 __all__ = [
     "Application",
@@ -24,4 +25,5 @@ __all__ = [
     "TeamMember",
     "TeamRequest",
     "User",
+    "UserRole",
 ]
