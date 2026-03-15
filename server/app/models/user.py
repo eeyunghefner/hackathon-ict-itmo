@@ -29,7 +29,6 @@ class User(Base):
     authorization_details: Mapped["AuthorizationDetails"] = relationship(
         back_populates="users"
     )
-    applications: Mapped[list["Application"]] = relationship(back_populates="user")
     teams: Mapped[list["TeamMember"]] = relationship(back_populates="user")
     captain_teams: Mapped[list["Team"]] = relationship(
         back_populates="captain",

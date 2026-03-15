@@ -7,6 +7,7 @@ from app.repositories import (
     create_hackathon,
     get_hackathon_by_id,
     get_hackathon_model_by_id,
+    get_hackathon_stats,
     get_hackathon_status_by_name,
     get_user_profile_by_id,
     list_hackathons,
@@ -16,10 +17,13 @@ from app.schemas import (
     CreateHackathonResponse,
     HackathonDetailResponse,
     HackathonListItemResponse,
+    HackathonStatsResponse,
     UpdateHackathonRequest,
 )
 
 DRAFT_STATUS = "draft"
+PUBLISHED_STATUS = "published"
+ARCHIVED_STATUS = "archived"
 ALLOWED_HACKATHON_EDITOR_ROLES = {"admin", "organizer"}
 
 
@@ -186,3 +190,92 @@ async def update_hackathon_entry(
 
     await session.commit()
     return await get_hackathon_entry(session, hackathon_id)
+
+
+async def set_hackathon_status(
+    session: AsyncSession,
+    *,
+    user_id: int,
+    hackathon_id: int,
+    status_name: str,
+) -> HackathonDetailResponse:
+    await _require_hackathon_editor(session, user_id)
+
+    hackathon = await get_hackathon_model_by_id(session, hackathon_id)
+    if hackathon is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Hackathon not found",
+        )
+
+    target_status = await get_hackathon_status_by_name(session, status_name)
+    if target_status is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Status '{status_name}' is not configured",
+        )
+
+    hackathon.status_id = target_status.id
+    await session.commit()
+    return await get_hackathon_entry(session, hackathon_id)
+
+
+async def publish_hackathon(
+    session: AsyncSession,
+    *,
+    user_id: int,
+    hackathon_id: int,
+) -> HackathonDetailResponse:
+    return await set_hackathon_status(
+        session,
+        user_id=user_id,
+        hackathon_id=hackathon_id,
+        status_name=PUBLISHED_STATUS,
+    )
+
+
+async def unpublish_hackathon(
+    session: AsyncSession,
+    *,
+    user_id: int,
+    hackathon_id: int,
+) -> HackathonDetailResponse:
+    return await set_hackathon_status(
+        session,
+        user_id=user_id,
+        hackathon_id=hackathon_id,
+        status_name=DRAFT_STATUS,
+    )
+
+
+async def archive_hackathon(
+    session: AsyncSession,
+    *,
+    user_id: int,
+    hackathon_id: int,
+) -> HackathonDetailResponse:
+    return await set_hackathon_status(
+        session,
+        user_id=user_id,
+        hackathon_id=hackathon_id,
+        status_name=ARCHIVED_STATUS,
+    )
+
+
+async def get_hackathon_stats_entry(
+    session: AsyncSession,
+    hackathon_id: int,
+) -> HackathonStatsResponse:
+    stats = await get_hackathon_stats(session, hackathon_id)
+    if stats is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Hackathon not found",
+        )
+
+    return HackathonStatsResponse(
+        participants=stats.participants,
+        teams=stats.teams,
+        solutions=stats.solutions,
+        durationHours=stats.duration_hours,
+    )

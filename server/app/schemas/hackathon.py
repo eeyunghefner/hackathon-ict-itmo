@@ -52,3 +52,10 @@ class UpdateHackathonRequest(BaseModel):
     participantLimit: int | None = Field(default=None, gt=0)
     teamLimit: int | None = Field(default=None, gt=0)
     rules: str | None = Field(default=None, min_length=1)
+
+
+class HackathonStatsResponse(BaseModel):
+    participants: int
+    teams: int
+    solutions: int
+    durationHours: int
