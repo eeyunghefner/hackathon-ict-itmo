@@ -1,5 +1,9 @@
 from fastapi import APIRouter
-# from .temp_router import router as temp_router
+from .auth import router as auth_router
+from .hackathon import router as hackathon_router
+from .user import router as user_router
 
 router = APIRouter()
-# router.include_router(temp_router)
+router.include_router(auth_router)
+router.include_router(hackathon_router)
+router.include_router(user_router)
