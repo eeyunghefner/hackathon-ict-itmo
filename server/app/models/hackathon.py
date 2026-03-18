@@ -43,4 +43,5 @@ class Hackathon(Base):
 
     status: Mapped["HackathonStatus"] = relationship(back_populates="hackathons")
     applications: Mapped[list["Application"]] = relationship(back_populates="hackathon")
+    events: Mapped[list["Event"]] = relationship(back_populates="hackathon")
     teams: Mapped[list["Team"]] = relationship(back_populates="hackathon")

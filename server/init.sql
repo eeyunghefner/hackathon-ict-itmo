@@ -48,22 +48,24 @@ CREATE TABLE hackathons (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE applications (
-    id SERIAL PRIMARY KEY,
-    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    hackathon_id INT NOT NULL REFERENCES hackathons(id) ON DELETE CASCADE,
-    applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(user_id, hackathon_id)
-);
-
 CREATE TABLE teams (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    hackathon_id INT NOT NULL REFERENCES hackathons(id) ON DELETE CASCADE,
+    description TEXT,
+    hackathon_id INT NULL REFERENCES hackathons(id) ON DELETE CASCADE,
     captain_id INT NULL REFERENCES users(id) ON DELETE SET NULL, -- Капитан должен быть пользователем
     max_members INT, -- Может переопределять общий лимит хакатона, если NULL - берется из hackathons.max_team_size
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(name, hackathon_id) -- Уникальное название команды в рамках одного хакатона
+);
+
+CREATE TABLE applications (
+    id SERIAL PRIMARY KEY,
+    team_id INT NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+    hackathon_id INT NOT NULL REFERENCES hackathons(id) ON DELETE CASCADE,
+    status VARCHAR(20) NOT NULL DEFAULT 'pending',
+    applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(team_id, hackathon_id)
 );
 
 -- Таблица участников команд (связь многие-ко-многим)
@@ -72,6 +74,41 @@ CREATE TABLE team_members (
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (team_id, user_id) -- Пользователь может быть только в одной команде на хакатоне (логика должна проверять это на уровне приложения или через триггер)
+);
+
+CREATE TABLE team_requests (
+    id SERIAL PRIMARY KEY,
+    team_id INT NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    status VARCHAR(20) NOT NULL DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(team_id, user_id)
+);
+
+CREATE TABLE rooms (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL UNIQUE,
+    capacity INT NOT NULL
+);
+
+CREATE TABLE room_bookings (
+    id SERIAL PRIMARY KEY,
+    room_id INT NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
+    created_by INT NULL REFERENCES users(id) ON DELETE SET NULL,
+    start_time TIMESTAMP NOT NULL,
+    end_time TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE events (
+    id SERIAL PRIMARY KEY,
+    hackathon_id INT NOT NULL REFERENCES hackathons(id) ON DELETE CASCADE,
+    room_id INT NOT NULL REFERENCES rooms(id) ON DELETE RESTRICT,
+    title TEXT NOT NULL,
+    description TEXT,
+    start_time TIMESTAMP NOT NULL,
+    end_time TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Тестовые данные
@@ -98,6 +135,7 @@ INSERT INTO authorization_details (password_hash) VALUES
 INSERT INTO hackathon_status (name) VALUES
 ('draft'),
 ('published'),
+('archived'),
 ('in_progress'),
 ('finished');
 
@@ -165,23 +203,20 @@ VALUES
 );
 
 
--- APPLICATIONS
-INSERT INTO applications (user_id, hackathon_id)
-VALUES
-(3, 1),
-(4, 1),
-(5, 1),
-(6, 1),
-(3, 2),
-(4, 2);
-
-
 -- TEAMS
-INSERT INTO teams (name, hackathon_id, captain_id, max_members)
+INSERT INTO teams (name, description, hackathon_id, captain_id, max_members)
 VALUES
-('CodeMasters', 1, 3, 5),
-('BugHunters', 1, 4, 5),
-('FinGurus', 2, 3, 4);
+('CodeMasters', 'AI developers', 1, 3, 5),
+('BugHunters', 'Backend and QA team', 1, 4, 5),
+('FinGurus', 'Fintech product team', 2, 3, 4);
+
+
+-- APPLICATIONS
+INSERT INTO applications (team_id, hackathon_id, status)
+VALUES
+(1, 1, 'pending'),
+(2, 1, 'approved'),
+(3, 2, 'pending');
 
 
 -- TEAM MEMBERS
@@ -198,3 +233,28 @@ VALUES
 -- FinGurus
 (3, 3),
 (3, 4);
+
+-- TEAM REQUESTS
+INSERT INTO team_requests (team_id, user_id, status)
+VALUES
+(1, 4, 'pending'),
+(2, 5, 'pending');
+
+-- ROOMS
+INSERT INTO rooms (name, capacity)
+VALUES
+('Auditorium A', 200),
+('Lecture Hall B', 120),
+('Conference Room C', 40);
+
+-- ROOM BOOKINGS
+INSERT INTO room_bookings (room_id, created_by, start_time, end_time)
+VALUES
+(1, 2, '2026-05-10 10:00:00', '2026-05-10 14:00:00'),
+(2, 2, '2026-05-10 12:00:00', '2026-05-10 15:30:00');
+
+-- EVENTS
+INSERT INTO events (hackathon_id, room_id, title, description, start_time, end_time)
+VALUES
+(1, 3, 'Opening Ceremony', 'Opening speech and kickoff', '2026-05-10 10:00:00', '2026-05-10 11:00:00'),
+(1, 3, 'Team Introductions', 'Short presentations by teams', '2026-05-10 11:30:00', '2026-05-10 12:30:00');
