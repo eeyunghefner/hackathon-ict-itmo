@@ -2,6 +2,7 @@ from pydantic import BaseModel, EmailStr, Field
 
 
 class RegisterRequest(BaseModel):
+    isuNumber: int
     email: EmailStr
     password: str = Field(min_length=8, max_length=255)
     firstName: str = Field(min_length=1, max_length=100)
@@ -12,7 +13,7 @@ class RegisterRequest(BaseModel):
 class RegisterResponse(BaseModel):
     id: str
     email: EmailStr
-    role: str
+    roles: list[str]
     token: str
 
 
@@ -24,7 +25,7 @@ class LoginRequest(BaseModel):
 class AuthUserResponse(BaseModel):
     id: str
     email: EmailStr
-    role: str
+    roles: list[str]
 
 
 class LoginResponse(BaseModel):

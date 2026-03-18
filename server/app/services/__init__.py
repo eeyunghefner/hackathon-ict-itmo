@@ -47,7 +47,7 @@ from .team import (
     reject_join_request,
     remove_team_member,
 )
-from .user import build_full_name, get_current_user_profile, split_full_name, update_current_user_profile
+from .user import build_full_name, get_current_user_profile, get_user_status, split_full_name, update_current_user_profile
 
 __all__ = [
     "approve_application",
@@ -72,6 +72,7 @@ __all__ = [
     "get_hackathon_stats_entry",
     "get_current_user_profile",
     "get_join_requests",
+    "get_user_status",
     "get_room_availability",
     "get_rooms",
     "get_team_entry",

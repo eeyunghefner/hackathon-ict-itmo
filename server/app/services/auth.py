@@ -168,6 +168,7 @@ async def register_user(
     try:
         user = await create_user_with_password(
             session,
+            isu_number=payload.isuNumber,
             email=payload.email,
             full_name=build_full_name(payload.firstName, payload.lastName),
             university=payload.university,
@@ -179,14 +180,14 @@ async def register_user(
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="User with this email already exists",
+            detail="User with this email or ISU number already exists",
         ) from exc
 
     token = create_access_token(user.id)
     return RegisterResponse(
         id=str(user.id),
         email=user.email,
-        role=PARTICIPANT_ROLE_NAME,
+        roles=[PARTICIPANT_ROLE_NAME],
         token=token,
     )
 
@@ -208,6 +209,6 @@ async def login_user(
         user=AuthUserResponse(
             id=str(user.id),
             email=user.email,
-            role=user.role_name,
+            roles=user.role_names,
         ),
     )
