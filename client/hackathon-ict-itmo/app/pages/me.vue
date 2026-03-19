@@ -2,10 +2,15 @@
   <Card>
     <h1>Личный кабинет</h1>
 
-    <FormField label="ФИО" v-model="user.fullName" type="input" />
-    <FormField label="Образование" v-model="user.education" type="input" />
-    <FormField label="Навыки" v-model="user.skills" type="input" />
-    <FormField label="Описание" v-model="user.description" type="textarea" />
+    <template v-if="user">
+      <FormField label="Имя" v-model="form.firstName" type="input" />
+      <FormField label="Фамилия" v-model="form.lastName" type="input" />
+      <FormField label="Университет" v-model="form.university" type="input" />
+      <p>Email: {{ user.email }}</p>
+      <p>Роль: {{ user.role }}</p>
+      <p>Team ID: {{ user.teamId || "—" }}</p>
+    </template>
+    <p v-else>Профиль не загружен</p>
 
     <Button @click="save" variant="primary">Сохранить</Button>
   </Card>
@@ -18,10 +23,35 @@ import Card from '~/components/ui/Card.vue'
 import Button from '~/components/ui/Button.vue'
 
 const store = useUserStore()
-const user = store.getUser
+const user = computed(() => store.getUser)
+const form = reactive({
+  firstName: "",
+  lastName: "",
+  university: ""
+})
 
-function save() {
-  store.updateUser(user)
-  alert('Сохранено!')
+onMounted(async () => {
+  try {
+    const profile = await store.fetchMyProfile()
+    form.firstName = profile.firstName
+    form.lastName = profile.lastName
+  } catch (error) {
+    console.error(error)
+    alert("Не удалось загрузить профиль")
+  }
+})
+
+async function save() {
+  try {
+    await store.updateMyProfile({
+      firstName: form.firstName,
+      lastName: form.lastName,
+      university: form.university
+    })
+    alert('Сохранено!')
+  } catch (error) {
+    console.error(error)
+    alert("Не удалось сохранить профиль")
+  }
 }
 </script>
