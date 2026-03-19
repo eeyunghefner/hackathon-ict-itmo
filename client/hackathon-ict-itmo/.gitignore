@@ -1,7 +1,4 @@
-.venv
-**/__pycache__/
-.env
-
+# Nuxt dev/build outputs
 .output
 .data
 .nuxt
@@ -9,15 +6,19 @@
 .cache
 dist
 
-node_modules
+# Node dependencies
+node_modulesa
 
+# Logs
 logs
 *.log
 
+# Misc
 .DS_Store
 .fleet
 .idea
 
+# Local env files
 .env
 .env.*
 !.env.example

@@ -1,0 +1,21 @@
+:root {
+  /* Цвета */
+  --color-black: #000000;
+  --color-white: #ffffff;
+  --color-primary: #1846C7;
+  --color-gray: #f5f5f5;
+  --color-gray-dark: #333333;
+
+  /* Скругления */
+  --radius: 8px;
+
+  /* Отступы */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+
+  /* Шрифты */
+  --font-main: 'Open Sans', sans-serif;
+}
