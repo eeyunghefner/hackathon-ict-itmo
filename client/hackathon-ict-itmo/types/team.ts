@@ -32,3 +32,15 @@ export function getTeamMembersCount(team: TeamListItem | TeamDetail): number {
   if (typeof team.membersCount === "number") return team.membersCount
   return 0
 }
+
+// 6.* Присоединение людей к командам
+export type TeamJoinRequestStatus = "pending" | "approved" | "rejected"
+
+export interface TeamJoinRequest {
+  id: string
+  teamId: string
+  status: TeamJoinRequestStatus | string
+  // Поля зависят от API; делаем их опциональными, чтобы UI не падал при частичных ответах.
+  userId?: string
+  userName?: string
+}

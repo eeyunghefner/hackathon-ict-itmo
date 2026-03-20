@@ -1,9 +1,10 @@
 import { defineStore } from "pinia"
-import type { CreateTeamRequest, TeamDetail, TeamListItem } from "../../types/team"
+import type { CreateTeamRequest, TeamDetail, TeamJoinRequest, TeamListItem } from "../../types/team"
 
 interface TeamState {
   teams: TeamListItem[]
   teamById: Record<string, TeamDetail | undefined>
+  joinRequestsByTeamId: Record<string, TeamJoinRequest[]>
   loading: boolean
 }
 
@@ -12,6 +13,7 @@ export const useTeamStore = defineStore("teams", {
   state: (): TeamState => ({
     teams: [],
     teamById: {},
+    joinRequestsByTeamId: {},
     loading: false
   }),
 
@@ -32,6 +34,11 @@ export const useTeamStore = defineStore("teams", {
 
     getTeamById: (state) => {
       return (id: string) => state.teamById[id]
+    }
+    ,
+
+    getJoinRequests: (state) => {
+      return (teamId: string) => state.joinRequestsByTeamId[teamId] || []
     }
 
   },
@@ -122,6 +129,94 @@ export const useTeamStore = defineStore("teams", {
       // Оптимистично убираем из локального кэша.
       this.teams = this.teams.filter((t) => t.id !== teamId)
       delete this.teamById[teamId]
+    }
+
+    ,
+
+    // 6.1 Подать заявку в команду
+    async submitJoinRequest(teamId: string) {
+      const config = useRuntimeConfig()
+      const token = useCookie<string | null>("token")
+
+      this.loading = true
+
+      const { error } = await useFetch(`/teams/${teamId}/join-request`, {
+        baseURL: config.public.apiBase,
+        method: "POST",
+        headers: token.value ? { Authorization: `Bearer ${token.value}` } : undefined
+      })
+
+      this.loading = false
+
+      if (error.value) throw error.value
+
+      // Обновим список заявок на случай, если UI сразу переключится.
+      await this.fetchJoinRequests(teamId)
+    },
+
+    // 6.2 Получить заявки команды (кастом-данные под UI)
+    async fetchJoinRequests(teamId: string) {
+      const config = useRuntimeConfig()
+      const token = useCookie<string | null>("token")
+
+      this.loading = true
+
+      const { data, error } = await useFetch<TeamJoinRequest[]>(
+        `/teams/${teamId}/join-requests`,
+        {
+          baseURL: config.public.apiBase,
+          method: "GET",
+          headers: token.value ? { Authorization: `Bearer ${token.value}` } : undefined
+        }
+      )
+
+      this.loading = false
+
+      if (error.value) throw error.value
+      if (!data.value) throw new Error("Join requests response is empty")
+
+      this.joinRequestsByTeamId[teamId] = data.value
+      return data.value
+    },
+
+    // 6.3 Принять заявку
+    async approveJoinRequest(requestId: string, teamId: string) {
+      const config = useRuntimeConfig()
+      const token = useCookie<string | null>("token")
+
+      this.loading = true
+
+      const { error } = await useFetch(`/team-requests/${requestId}/approve`, {
+        baseURL: config.public.apiBase,
+        method: "PATCH",
+        headers: token.value ? { Authorization: `Bearer ${token.value}` } : undefined
+      })
+
+      this.loading = false
+
+      if (error.value) throw error.value
+
+      return await this.fetchJoinRequests(teamId)
+    },
+
+    // 6.4 Отклонить заявку
+    async rejectJoinRequest(requestId: string, teamId: string) {
+      const config = useRuntimeConfig()
+      const token = useCookie<string | null>("token")
+
+      this.loading = true
+
+      const { error } = await useFetch(`/team-requests/${requestId}/reject`, {
+        baseURL: config.public.apiBase,
+        method: "PATCH",
+        headers: token.value ? { Authorization: `Bearer ${token.value}` } : undefined
+      })
+
+      this.loading = false
+
+      if (error.value) throw error.value
+
+      return await this.fetchJoinRequests(teamId)
     }
 
   }
