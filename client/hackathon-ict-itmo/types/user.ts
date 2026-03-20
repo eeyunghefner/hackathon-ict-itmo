@@ -13,3 +13,13 @@ export interface UpdateUserProfileRequest {
   lastName: string
   university: string
 }
+
+export type UserRole = "participant" | "organizer" | "admin"
+
+export interface AdminUser {
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+  roles: UserRole[]
+}
