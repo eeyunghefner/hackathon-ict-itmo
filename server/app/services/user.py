@@ -6,6 +6,12 @@ from app.models import Team
 from app.repositories import get_user_by_isu_number, get_user_profile_by_id, update_user_profile
 from app.schemas import UpdateUserProfileRequest, UserMeResponse, UserStatusResponse
 
+ROLE_NAME_RU = {
+    "admin": "Администратор",
+    "organizer": "Организатор",
+    "participant": "Участник",
+}
+
 
 def split_full_name(full_name: str) -> tuple[str, str]:
     parts = full_name.strip().split(maxsplit=1)
@@ -37,7 +43,7 @@ async def get_current_user_profile(
         firstName=first_name,
         lastName=last_name,
         email=user.email,
-        roles=user.role_names,
+        roles=[ROLE_NAME_RU.get(r, r) for r in user.role_names],
         university=user.university,
         teamId=str(user.team_id) if user.team_id is not None else None,
     )
