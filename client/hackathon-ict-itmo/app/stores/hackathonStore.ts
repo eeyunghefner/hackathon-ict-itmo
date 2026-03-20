@@ -3,6 +3,7 @@ import type {
   CreateHackathonRequest,
   CreateHackathonResponse,
   CreateHackathonApplicationRequest,
+  CreateHackathonEventRequest,
   GetHackathonsQuery,
   HackathonDetail,
   HackathonApplication,
@@ -10,6 +11,7 @@ import type {
   HackathonListItem,
   TeamRegistration,
   TeamApplication,
+  UpdateHackathonEventRequest,
   UpdateHackathonRequest
 } from "../../types/hackathon"
 
@@ -31,7 +33,18 @@ export const useHackathonStore = defineStore("hackathons", {
 
     schedules: {
       "1": [
-        { id: "1", name: "Opening", time: "10:00" }
+        {
+          id: "1",
+          // Legacy fields used by some UI
+          name: "Opening Ceremony",
+          time: "10:00",
+          // New API shape
+          title: "Opening Ceremony",
+          description: "Opening speech",
+          startTime: "2026-05-10T10:00",
+          endTime: "2026-05-10T11:00",
+          roomId: "00000000-0000-0000-0000-000000000000"
+        }
       ]
     },
 
@@ -294,18 +307,90 @@ export const useHackathonStore = defineStore("hackathons", {
       return await this.fetchHackathonApplications(hackathonId)
     },
 
-    addEvent(hackathonId: string, event: HackathonEvent) {
+    // 9.2 Получить расписание
+    async fetchEvents(hackathonId: string) {
+      const config = useRuntimeConfig()
+      const token = useCookie<string | null>("token")
 
-      if (!this.schedules[hackathonId]) {
-        this.schedules[hackathonId] = []
-      }
+      this.loading = true
 
-      this.schedules[hackathonId].push(event)
+      const { data, error } = await useFetch<HackathonEvent[]>(
+        `/hackathons/${hackathonId}/events`,
+        {
+          baseURL: config.public.apiBase,
+          method: "GET",
+          headers: token.value ? { Authorization: `Bearer ${token.value}` } : undefined
+        }
+      )
+
+      this.loading = false
+
+      if (error.value) throw error.value
+      this.schedules[hackathonId] = data.value ?? []
+      return this.schedules[hackathonId]
     },
 
-    removeEvent(hackathonId: string, eventId: string) {
+    // 9.1 Добавить событие
+    async createEvent(hackathonId: string, payload: CreateHackathonEventRequest) {
+      const config = useRuntimeConfig()
+      const token = useCookie<string | null>("token")
 
-      this.schedules[hackathonId] = (this.schedules[hackathonId] ?? []).filter(e => e.id !== eventId)
+      this.loading = true
+
+      const { error } = await useFetch(`/hackathons/${hackathonId}/events`, {
+        baseURL: config.public.apiBase,
+        method: "POST",
+        body: payload,
+        headers: token.value ? { Authorization: `Bearer ${token.value}` } : undefined
+      })
+
+      this.loading = false
+
+      if (error.value) throw error.value
+      return await this.fetchEvents(hackathonId)
+    },
+
+    // 9.3 Редактировать событие
+    async updateEvent(
+      eventId: string,
+      hackathonId: string,
+      payload: UpdateHackathonEventRequest
+    ) {
+      const config = useRuntimeConfig()
+      const token = useCookie<string | null>("token")
+
+      this.loading = true
+
+      const { error } = await useFetch(`/events/${eventId}`, {
+        baseURL: config.public.apiBase,
+        method: "PATCH",
+        body: payload,
+        headers: token.value ? { Authorization: `Bearer ${token.value}` } : undefined
+      })
+
+      this.loading = false
+
+      if (error.value) throw error.value
+      return await this.fetchEvents(hackathonId)
+    },
+
+    // 9.4 Удалить событие
+    async deleteEvent(eventId: string, hackathonId: string) {
+      const config = useRuntimeConfig()
+      const token = useCookie<string | null>("token")
+
+      this.loading = true
+
+      const { error } = await useFetch(`/events/${eventId}`, {
+        baseURL: config.public.apiBase,
+        method: "DELETE",
+        headers: token.value ? { Authorization: `Bearer ${token.value}` } : undefined
+      })
+
+      this.loading = false
+
+      if (error.value) throw error.value
+      return await this.fetchEvents(hackathonId)
     }
 
   }

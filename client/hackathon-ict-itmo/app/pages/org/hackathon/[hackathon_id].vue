@@ -28,10 +28,75 @@
       </div>
 
       <h3>Расписание</h3>
-      <Table
-        :headers="['Событие', 'Время', 'Действие']"
-        :rows="events.map(e => [e.name, e.time, 'Удалить'])"
-      />
+      <div class="events-manager">
+        <form class="event-form" @submit.prevent="submitEvent">
+          <h4>{{ editingEventId ? 'Редактирование события' : 'Добавить событие' }}</h4>
+
+          <label>Название</label>
+          <input v-model="eventForm.title" type="text" />
+
+          <label>Описание</label>
+          <textarea v-model="eventForm.description" rows="3" />
+
+          <label>Начало</label>
+          <input v-model="eventForm.startTime" type="datetime-local" />
+
+          <label>Конец</label>
+          <input v-model="eventForm.endTime" type="datetime-local" />
+
+          <label>Room ID</label>
+          <input v-model="eventForm.roomId" type="text" />
+
+          <div class="event-form-actions">
+            <Button variant="primary" :disabled="submittingEvent" @click="submitEvent">
+              {{ editingEventId ? 'Сохранить' : 'Добавить' }}
+            </Button>
+            <Button
+              v-if="editingEventId"
+              variant="secondary"
+              :disabled="submittingEvent"
+              @click="cancelEdit"
+            >
+              Отмена
+            </Button>
+          </div>
+        </form>
+
+        <table class="events-table">
+          <thead>
+            <tr>
+              <th>Событие</th>
+              <th>Время</th>
+              <th>Room ID</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="e in events" :key="e.id">
+              <td>{{ e.title ?? e.name ?? "—" }}</td>
+              <td>{{ formatEventTime(e) }}</td>
+              <td>{{ e.roomId ?? "—" }}</td>
+              <td class="events-actions">
+                <Button
+                  variant="secondary"
+                  @click="startEdit(e)"
+                  :disabled="submittingEvent || deletingEventId === e.id"
+                >
+                  Редактировать
+                </Button>
+                <Button
+                  variant="primary"
+                  style="margin-left: 0.5rem;"
+                  @click="removeEvent(e)"
+                  :disabled="deletingEventId === e.id"
+                >
+                  Удалить
+                </Button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </Card>
 
     <Card v-if="tab === 'participants'">
@@ -76,7 +141,7 @@ import Card from '~/components/ui/Card.vue'
 import FormField from '~/components/ui/FormField.vue'
 import Button from '~/components/ui/Button.vue'
 import Table from '~/components/ui/Table.vue'
-import type { HackathonDetail } from '../../../../types/hackathon'
+import type { HackathonDetail, HackathonEvent, CreateHackathonEventRequest } from '../../../../types/hackathon'
 
 const route = useRoute()
 const store = useHackathonStore()
@@ -95,7 +160,7 @@ const hackathon = reactive<HackathonDetail>({
   rules: "",
   status: "draft"
 })
-const events = store.getSchedule(id)
+const events = computed(() => store.getSchedule(id))
 const registrations = store.getRegistrations(id)
 const hackathonApplications = computed(() => store.getHackathonApplications(id))
 
@@ -106,11 +171,127 @@ onMounted(async () => {
     const data = await store.fetchHackathon(id)
     Object.assign(hackathon, data)
     await store.fetchHackathonApplications(id)
+    await store.fetchEvents(id)
   } catch (error) {
     console.error(error)
     alert("Не удалось загрузить хакатон")
   }
 })
+
+const editingEventId = ref<string | null>(null)
+const submittingEvent = ref(false)
+const deletingEventId = ref<string | null>(null)
+
+const eventForm = reactive<{
+  title: string
+  description: string
+  startTime: string
+  endTime: string
+  roomId: string
+}>({
+  title: "",
+  description: "",
+  startTime: "",
+  endTime: "",
+  roomId: ""
+})
+
+function normalizeDatetimeLocal(value?: string) {
+  if (!value) return ""
+  // Accept formats like `2026-05-10T10:00` or `2026-05-10T10:00:00`
+  return value.length >= 16 ? value.slice(0, 16) : value
+}
+
+function formatEventTime(e: HackathonEvent) {
+  const start = e.startTime ?? e.time
+  const end = e.endTime
+  if (start && end) return `${start} - ${end}`
+  return start ?? ""
+}
+
+function resetEventForm() {
+  eventForm.title = ""
+  eventForm.description = ""
+  eventForm.startTime = ""
+  eventForm.endTime = ""
+  eventForm.roomId = ""
+}
+
+function cancelEdit() {
+  editingEventId.value = null
+  resetEventForm()
+}
+
+function startEdit(e: HackathonEvent) {
+  editingEventId.value = e.id
+  eventForm.title = e.title ?? e.name ?? ""
+  eventForm.description = e.description ?? ""
+  eventForm.startTime = normalizeDatetimeLocal(e.startTime)
+  eventForm.endTime = normalizeDatetimeLocal(e.endTime)
+  eventForm.roomId = e.roomId ?? ""
+}
+
+async function submitEvent() {
+  if (submittingEvent.value) return
+  if (!eventForm.title.trim()) {
+    alert("Укажите название события")
+    return
+  }
+  if (!eventForm.startTime || !eventForm.endTime) {
+    alert("Укажите время начала и окончания")
+    return
+  }
+  if (!eventForm.roomId.trim()) {
+    alert("Укажите roomId")
+    return
+  }
+
+  submittingEvent.value = true
+  try {
+    const payload: CreateHackathonEventRequest = {
+      title: eventForm.title,
+      description: eventForm.description,
+      startTime: eventForm.startTime,
+      endTime: eventForm.endTime,
+      roomId: eventForm.roomId
+    }
+
+    if (editingEventId.value) {
+      await store.updateEvent(editingEventId.value, id, payload)
+      alert("Событие обновлено")
+    } else {
+      await store.createEvent(id, payload)
+      alert("Событие добавлено")
+    }
+
+    cancelEdit()
+  } catch (e) {
+    console.error(e)
+    alert("Не удалось сохранить событие")
+  } finally {
+    submittingEvent.value = false
+  }
+}
+
+async function removeEvent(e: HackathonEvent) {
+  if (deletingEventId.value) return
+  const ok = window.confirm("Удалить событие?")
+  if (!ok) return
+
+  deletingEventId.value = e.id
+  try {
+    await store.deleteEvent(e.id, id)
+    alert("Событие удалено")
+
+    // Если удалили активное редактируемое событие, сбросим форму.
+    if (editingEventId.value === e.id) cancelEdit()
+  } catch (err) {
+    console.error(err)
+    alert("Не удалось удалить событие")
+  } finally {
+    deletingEventId.value = null
+  }
+}
 
 async function save() {
   try {
@@ -179,5 +360,44 @@ async function reject(applicationId: string) {
 <style>
 .right-margin {
     margin-right: 1.5rem;
+}
+
+.events-manager {
+  margin-top: 1rem;
+}
+
+.event-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 600px;
+}
+
+.event-form input,
+.event-form textarea {
+  padding: 0.5rem;
+}
+
+.event-form-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.events-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.events-table th,
+.events-table td {
+  padding: 0.5rem;
+  border-bottom: 1px solid #eaeaea;
+  vertical-align: top;
+}
+
+.events-actions {
+  white-space: nowrap;
 }
 </style>

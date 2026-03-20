@@ -57,9 +57,27 @@ export type UpdateHackathonRequest = Partial<Pick<
 
 export interface HackathonEvent {
   id: string
-  name: string
-  time: string
+  // New API shape
+  title?: string
+  description?: string
+  startTime?: string
+  endTime?: string
+  roomId?: string
+
+  // Legacy fields (currently used in some UI screens)
+  name?: string
+  time?: string
 }
+
+export interface CreateHackathonEventRequest {
+  title: string
+  description?: string
+  startTime: string
+  endTime: string
+  roomId: string
+}
+
+export type UpdateHackathonEventRequest = Partial<CreateHackathonEventRequest>
 
 export interface TeamParticipant {
   id: string
