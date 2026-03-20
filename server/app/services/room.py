@@ -33,7 +33,7 @@ async def _require_room_booker(session: AsyncSession, user_id: int) -> None:
             detail="User not found",
         )
 
-    if user.role_name not in ALLOWED_ROOM_BOOKER_ROLES:
+    if not ALLOWED_ROOM_BOOKER_ROLES.intersection(user.role_names):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have permission to book rooms",

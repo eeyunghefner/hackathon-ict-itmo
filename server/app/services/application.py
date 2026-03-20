@@ -36,7 +36,7 @@ async def _require_organizer(session: AsyncSession, user_id: int) -> None:
             detail="User not found",
         )
 
-    if user.role_name not in ALLOWED_ORGANIZER_ROLES:
+    if not ALLOWED_ORGANIZER_ROLES.intersection(user.role_names):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have permission to manage applications",
