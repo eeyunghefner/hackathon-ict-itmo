@@ -77,3 +77,17 @@ export interface TeamApplication {
   teamName: string
   members: TeamParticipant[]
 }
+
+// 4.* Заявки команды на хакатон
+export type HackathonApplicationStatus = "pending" | "approved" | "rejected"
+
+export interface HackathonApplication {
+  id: string
+  teamId: string
+  teamName: string
+  status: HackathonApplicationStatus
+}
+
+export interface CreateHackathonApplicationRequest {
+  teamId: string
+}

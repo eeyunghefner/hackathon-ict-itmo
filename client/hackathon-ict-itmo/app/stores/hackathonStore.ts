@@ -2,8 +2,10 @@ import { defineStore } from "pinia"
 import type {
   CreateHackathonRequest,
   CreateHackathonResponse,
+  CreateHackathonApplicationRequest,
   GetHackathonsQuery,
   HackathonDetail,
+  HackathonApplication,
   HackathonEvent,
   HackathonListItem,
   TeamRegistration,
@@ -17,6 +19,7 @@ interface HackathonState {
   schedules: Record<string, HackathonEvent[]>
   registrations: Record<string, TeamRegistration[]>
   applications: Record<string, TeamApplication[]>
+  hackathonApplications: Record<string, HackathonApplication[]>
   loading: boolean
 }
 
@@ -55,9 +58,9 @@ export const useHackathonStore = defineStore("hackathons", {
           ]
         }
       ]
-    }
+    },
+    hackathonApplications: {},
 
-    ,
     loading: false
   }),
 
@@ -83,6 +86,12 @@ export const useHackathonStore = defineStore("hackathons", {
     getApplications: (state) => {
       return (id: string) =>
         state.applications[id] || []
+    },
+
+    // 4.2 Получить заявки хакатона (организатор)
+    getHackathonApplications: (state) => {
+      return (hackathonId: string) =>
+        state.hackathonApplications[hackathonId] || []
     }
 
   },
@@ -198,6 +207,91 @@ export const useHackathonStore = defineStore("hackathons", {
 
       if (error.value) throw error.value
       return await this.fetchHackathon(hackathonId)
+    },
+
+    // 4.1 Подать заявку команды
+    async submitHackathonApplication(hackathonId: string, payload: CreateHackathonApplicationRequest) {
+      const config = useRuntimeConfig()
+      const token = useCookie<string | null>("token")
+
+      this.loading = true
+
+      const { error } = await useFetch(`/hackathons/${hackathonId}/applications`, {
+        baseURL: config.public.apiBase,
+        method: "POST",
+        body: payload,
+        headers: token.value ? { Authorization: `Bearer ${token.value}` } : undefined
+      })
+
+      this.loading = false
+
+      if (error.value) throw error.value
+
+      // if organizer is viewing, refresh list
+      await this.fetchHackathonApplications(hackathonId)
+    },
+
+    // 4.2 Получить заявки хакатона (организатор)
+    async fetchHackathonApplications(hackathonId: string) {
+      const config = useRuntimeConfig()
+      const token = useCookie<string | null>("token")
+
+      this.loading = true
+
+      const { data, error } = await useFetch<HackathonApplication[]>(
+        `/hackathons/${hackathonId}/applications`,
+        {
+          baseURL: config.public.apiBase,
+          method: "GET",
+          headers: token.value ? { Authorization: `Bearer ${token.value}` } : undefined
+        }
+      )
+
+      this.loading = false
+
+      if (error.value) throw error.value
+      if (!data.value) throw new Error("Hackathon applications response is empty")
+
+      this.hackathonApplications[hackathonId] = data.value
+      return data.value
+    },
+
+    // 4.3 Одобрить заявку
+    async approveHackathonApplication(applicationId: string, hackathonId: string) {
+      const config = useRuntimeConfig()
+      const token = useCookie<string | null>("token")
+
+      this.loading = true
+
+      const { error } = await useFetch(`/applications/${applicationId}/approve`, {
+        baseURL: config.public.apiBase,
+        method: "PATCH",
+        headers: token.value ? { Authorization: `Bearer ${token.value}` } : undefined
+      })
+
+      this.loading = false
+
+      if (error.value) throw error.value
+      return await this.fetchHackathonApplications(hackathonId)
+    },
+
+    // 4.4 Отклонить заявку
+    async rejectHackathonApplication(applicationId: string, hackathonId: string) {
+      const config = useRuntimeConfig()
+      const token = useCookie<string | null>("token")
+
+      this.loading = true
+
+      const { error } = await useFetch(`/applications/${applicationId}/reject`, {
+        baseURL: config.public.apiBase,
+        method: "PATCH",
+        headers: token.value ? { Authorization: `Bearer ${token.value}` } : undefined
+      })
+
+      this.loading = false
+
+      if (error.value) throw error.value
+      return await this.fetchHackathonApplications(hackathonId)
     },
 
     addEvent(hackathonId: string, event: HackathonEvent) {

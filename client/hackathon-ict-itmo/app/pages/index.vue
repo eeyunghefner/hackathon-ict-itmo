@@ -1,7 +1,7 @@
 <template>
   <div>
     <Card>
-      <h1>Мои хакатоны</h1>
+      <h1>Хакатоны</h1>
     </Card>
 
     <Table

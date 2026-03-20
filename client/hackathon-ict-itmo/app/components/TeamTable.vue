@@ -11,7 +11,7 @@
     <tbody>
       <tr v-for="team in teams" :key="team.id">
         <td>{{ team.name }}</td>
-        <td>{{ team.members }}</td>
+        <td>{{ getTeamMembersCount(team) }}</td>
         <td>
           <button @click="apply(team.id)">Подать заявку</button>
         </td>
@@ -21,13 +21,16 @@
 </template>
 
 <script setup lang="ts">
-import type { Team } from "../../types/team"
+import { useRouter } from "vue-router"
+import { getTeamMembersCount, type TeamListItem } from "../../types/team"
+
+const router = useRouter()
 
 defineProps<{
-  teams: Team[]
+  teams: TeamListItem[]
 }>()
 
 function apply(id: string) {
-  console.log("Apply to team", id)
+  router.push({ path: "/hackathons/apply", query: { teamId: id } })
 }
 </script>
