@@ -20,19 +20,22 @@ export const useAdminStore = defineStore("admin", {
 
   actions: {
     async fetchUsersByRole(role: UserRole, page = 1) {
-      const config = useRuntimeConfig()
-      const token = useCookie<string | null>("token")
+  const config = useRuntimeConfig()
+  const token = useCookie<string | null>("token")
 
-      const { data, error } = await useFetch<AdminUser[]>("/admin/users", {
-        baseURL: config.public.apiBase,
-        method: "GET",
-        query: { role, page },
-        headers: token.value ? { Authorization: `Bearer ${token.value}` } : undefined
-      })
-
-      if (error.value) throw error.value
-      return data.value ?? []
-    },
+  try {
+    const data = await $fetch<AdminUser[]>("/admin/users", {
+      baseURL: config.public.apiBase,
+      method: "GET",
+      query: { role, page },
+      headers: token.value ? { Authorization: `Bearer ${token.value}` } : undefined
+    })
+    
+    return data ?? []
+  } catch (error) {
+    throw error
+  }
+},
 
     async fetchAllUsers(page = 1) {
       this.loading = true
