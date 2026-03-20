@@ -79,6 +79,13 @@ export interface CreateHackathonEventRequest {
 
 export type UpdateHackathonEventRequest = Partial<CreateHackathonEventRequest>
 
+export interface HackathonStats {
+  participants: number
+  teams: number
+  solutions: number
+  durationHours: number
+}
+
 export interface TeamParticipant {
   id: string
   name: string

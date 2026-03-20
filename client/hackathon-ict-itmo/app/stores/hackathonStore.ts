@@ -4,6 +4,7 @@ import type {
   CreateHackathonResponse,
   CreateHackathonApplicationRequest,
   CreateHackathonEventRequest,
+  HackathonStats,
   GetHackathonsQuery,
   HackathonDetail,
   HackathonApplication,
@@ -19,6 +20,7 @@ interface HackathonState {
   hackathons: HackathonListItem[]
   hackathonById: Record<string, HackathonDetail | undefined>
   schedules: Record<string, HackathonEvent[]>
+  stats: Record<string, HackathonStats | undefined>
   registrations: Record<string, TeamRegistration[]>
   applications: Record<string, TeamApplication[]>
   hackathonApplications: Record<string, HackathonApplication[]>
@@ -47,6 +49,8 @@ export const useHackathonStore = defineStore("hackathons", {
         }
       ]
     },
+
+    stats: {},
 
     registrations: {
       "1": [
@@ -89,6 +93,10 @@ export const useHackathonStore = defineStore("hackathons", {
     getSchedule: (state) => {
       return (id: string) =>
         state.schedules[id] || []
+    },
+
+    getHackathonStats: (state) => {
+      return (hackathonId: string) => state.stats[hackathonId]
     },
 
     getRegistrations: (state) => {
@@ -328,6 +336,31 @@ export const useHackathonStore = defineStore("hackathons", {
       if (error.value) throw error.value
       this.schedules[hackathonId] = data.value ?? []
       return this.schedules[hackathonId]
+    },
+
+    // 11.2 Статистика хакатона (организатор)
+    async fetchHackathonStats(hackathonId: string) {
+      const config = useRuntimeConfig()
+      const token = useCookie<string | null>("token")
+
+      this.loading = true
+
+      const { data, error } = await useFetch<HackathonStats>(
+        `/hackathons/${hackathonId}/stats`,
+        {
+          baseURL: config.public.apiBase,
+          method: "GET",
+          headers: token.value ? { Authorization: `Bearer ${token.value}` } : undefined
+        }
+      )
+
+      this.loading = false
+
+      if (error.value) throw error.value
+      if (!data.value) throw new Error("Hackathon stats response is empty")
+
+      this.stats[hackathonId] = data.value
+      return data.value
     },
 
     // 9.1 Добавить событие

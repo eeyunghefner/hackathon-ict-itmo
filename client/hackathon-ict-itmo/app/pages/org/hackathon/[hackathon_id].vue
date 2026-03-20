@@ -6,6 +6,7 @@
       <Button @click="tab = 'info'" variant="secondary" class="right-margin">Общая информация</Button>
       <Button @click="tab = 'participants'" variant="secondary" class="right-margin">Участники</Button>
       <Button @click="tab = 'applications'" variant="secondary" class="right-margin">Заявки</Button>
+      <Button @click="tab = 'stats'" variant="secondary" class="right-margin">Статистика</Button>
     </div>
 
     <Card v-if="tab === 'info'">
@@ -130,6 +131,13 @@
         </tbody>
       </table>
     </Card>
+
+    <Card v-if="tab === 'stats'">
+      <Table
+        :headers="['Показатель', 'Значение']"
+        :rows="statsRows"
+      />
+    </Card>
   </Card>
 </template>
 
@@ -163,6 +171,17 @@ const hackathon = reactive<HackathonDetail>({
 const events = computed(() => store.getSchedule(id))
 const registrations = store.getRegistrations(id)
 const hackathonApplications = computed(() => store.getHackathonApplications(id))
+const hackathonStats = computed(() => store.getHackathonStats(id))
+
+const statsRows = computed(() => {
+  const s = hackathonStats.value
+  return [
+    ["Участники", s?.participants ?? "—"],
+    ["Команды", s?.teams ?? "—"],
+    ["Решения", s?.solutions ?? "—"],
+    ["Длительность (часы)", s?.durationHours ?? "—"]
+  ]
+})
 
 const tab = ref('info')
 
@@ -172,6 +191,7 @@ onMounted(async () => {
     Object.assign(hackathon, data)
     await store.fetchHackathonApplications(id)
     await store.fetchEvents(id)
+    await store.fetchHackathonStats(id)
   } catch (error) {
     console.error(error)
     alert("Не удалось загрузить хакатон")
