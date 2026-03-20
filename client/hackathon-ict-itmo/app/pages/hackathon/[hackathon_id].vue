@@ -1,6 +1,6 @@
 <template>
   <Card>
-    <h1>{{ hackathon?.name }}</h1>
+    <h1>{{ hackathon?.title }}</h1>
     <p>{{ hackathon?.description }}</p>
   </Card>
 
@@ -23,6 +23,11 @@ const route = useRoute()
 const store = useHackathonStore()
 const id = route.params.hackathon_id as string
 
-const hackathon = store.getHackathonById(id)
+onMounted(() => {
+  // Store keeps cache, but ensure we request details from API
+  store.fetchHackathon(id).catch((e) => console.error(e))
+})
+
+const hackathon = computed(() => store.getHackathonById(id))
 const events = store.getSchedule(id)
 </script>

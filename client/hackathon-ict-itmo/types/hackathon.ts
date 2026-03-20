@@ -1,17 +1,59 @@
 export type HackathonFormat = "online" | "offline" | "hybrid"
+export type HackathonStatus = "draft" | "published" | "archived"
 
-export interface Hackathon {
-  id: string
-  name: string
+// 3.1 Создать хакатон
+export interface CreateHackathonRequest {
+  title: string
   theme: string
   format: HackathonFormat
   description: string
+  startDate: string // YYYY-MM-DD
+  endDate: string // YYYY-MM-DD
   participantLimit: number
   teamLimit: number
-  regulations: string
-  published: boolean
-  organizerId: string
+  rules: string
 }
+
+export interface CreateHackathonResponse {
+  id: string
+  status: "draft"
+}
+
+// 3.2 Получить список хакатонов
+export interface GetHackathonsQuery {
+  status?: HackathonStatus
+  page?: number
+  limit?: number
+}
+
+export interface HackathonListItem {
+  id: string
+  title: string
+  format: HackathonFormat
+  startDate: string // YYYY-MM-DD
+  status: HackathonStatus
+}
+
+// 3.3 Получить один хакатон
+export interface HackathonDetail {
+  id: string
+  title: string
+  theme: string
+  description: string
+  format: HackathonFormat
+  startDate: string // YYYY-MM-DD
+  endDate: string // YYYY-MM-DD
+  participantLimit: number
+  teamLimit: number
+  rules: string
+  status: HackathonStatus
+}
+
+// 3.4 Редактировать хакатон
+export type UpdateHackathonRequest = Partial<Pick<
+  CreateHackathonRequest,
+  "title" | "theme" | "format" | "description" | "startDate" | "endDate" | "participantLimit" | "teamLimit" | "rules"
+>>
 
 export interface HackathonEvent {
   id: string

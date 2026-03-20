@@ -1,35 +1,30 @@
 import { defineStore } from "pinia"
 import type {
-  Hackathon,
+  CreateHackathonRequest,
+  CreateHackathonResponse,
+  GetHackathonsQuery,
+  HackathonDetail,
   HackathonEvent,
+  HackathonListItem,
   TeamRegistration,
-  TeamApplication
+  TeamApplication,
+  UpdateHackathonRequest
 } from "../../types/hackathon"
 
 interface HackathonState {
-  hackathons: Hackathon[]
+  hackathons: HackathonListItem[]
+  hackathonById: Record<string, HackathonDetail | undefined>
   schedules: Record<string, HackathonEvent[]>
   registrations: Record<string, TeamRegistration[]>
   applications: Record<string, TeamApplication[]>
+  loading: boolean
 }
 
 export const useHackathonStore = defineStore("hackathons", {
 
   state: (): HackathonState => ({
-    hackathons: [
-      {
-        id: "1",
-        name: "AI Hackathon",
-        theme: "Artificial Intelligence",
-        format: "online",
-        description: "Hackathon about AI technologies",
-        participantLimit: 100,
-        teamLimit: 20,
-        regulations: "Build AI project in 48 hours",
-        published: true,
-        organizerId: "1"
-      }
-    ],
+    hackathons: [],
+    hackathonById: {},
 
     schedules: {
       "1": [
@@ -62,20 +57,17 @@ export const useHackathonStore = defineStore("hackathons", {
       ]
     }
 
+    ,
+    loading: false
   }),
 
   getters: {
 
     getHackathons: (state) => state.hackathons,
 
-    getOrganizerHackathons: (state) => {
-      return (organizerId: string) =>
-        state.hackathons.filter(h => h.organizerId === organizerId)
-    },
-
     getHackathonById: (state) => {
       return (id: string) =>
-        state.hackathons.find(h => h.id === id)
+        state.hackathonById[id]
     },
 
     getSchedule: (state) => {
@@ -97,22 +89,115 @@ export const useHackathonStore = defineStore("hackathons", {
 
   actions: {
 
-    addHackathon(hackathon: Hackathon) {
-      this.hackathons.push(hackathon)
+    async createHackathon(payload: CreateHackathonRequest) {
+      const config = useRuntimeConfig()
+      const token = useCookie<string | null>("token")
+
+      this.loading = true
+
+      const { data, error } = await useFetch<CreateHackathonResponse>("/hackathons", {
+        baseURL: config.public.apiBase,
+        method: "POST",
+        body: payload,
+        headers: token.value ? { Authorization: `Bearer ${token.value}` } : undefined
+      })
+
+      this.loading = false
+
+      if (error.value) throw error.value
+      if (!data.value) throw new Error("Create hackathon response is empty")
+
+      return data.value
     },
 
-    updateHackathon(updated: Hackathon) {
-      const index = this.hackathons.findIndex(h => h.id === updated.id)
-      if (index !== -1) {
-        this.hackathons[index] = updated
-      }
+    async fetchHackathons(query: GetHackathonsQuery = {}) {
+      const config = useRuntimeConfig()
+      const token = useCookie<string | null>("token")
+
+      this.loading = true
+
+      const { data, error } = await useFetch<HackathonListItem[]>("/hackathons", {
+        baseURL: config.public.apiBase,
+        query,
+        headers: token.value ? { Authorization: `Bearer ${token.value}` } : undefined
+      })
+
+      this.loading = false
+
+      if (error.value) throw error.value
+      if (!data.value) throw new Error("Hackathons list response is empty")
+
+      this.hackathons = data.value
+      return data.value
     },
 
-    togglePublication(id: string) {
-      const hackathon = this.hackathons.find(h => h.id === id)
-      if (hackathon) {
-        hackathon.published = !hackathon.published
-      }
+    async fetchHackathon(hackathonId: string) {
+      const config = useRuntimeConfig()
+      const token = useCookie<string | null>("token")
+
+      this.loading = true
+
+      const { data, error } = await useFetch<HackathonDetail>(`/hackathons/${hackathonId}`, {
+        baseURL: config.public.apiBase,
+        headers: token.value ? { Authorization: `Bearer ${token.value}` } : undefined
+      })
+
+      this.loading = false
+
+      if (error.value) throw error.value
+      if (!data.value) throw new Error("Hackathon response is empty")
+
+      this.hackathonById[hackathonId] = data.value
+      return data.value
+    },
+
+    async updateHackathon(hackathonId: string, payload: UpdateHackathonRequest) {
+      const config = useRuntimeConfig()
+      const token = useCookie<string | null>("token")
+
+      this.loading = true
+
+      const { error } = await useFetch(`/hackathons/${hackathonId}`, {
+        baseURL: config.public.apiBase,
+        method: "PATCH",
+        body: payload,
+        headers: token.value ? { Authorization: `Bearer ${token.value}` } : undefined
+      })
+
+      this.loading = false
+
+      if (error.value) throw error.value
+      return await this.fetchHackathon(hackathonId)
+    },
+
+    async publishHackathon(hackathonId: string) {
+      return await this._transitionStatus(hackathonId, "publish")
+    },
+
+    async unpublishHackathon(hackathonId: string) {
+      return await this._transitionStatus(hackathonId, "unpublish")
+    },
+
+    async archiveHackathon(hackathonId: string) {
+      return await this._transitionStatus(hackathonId, "archive")
+    },
+
+    async _transitionStatus(hackathonId: string, action: "publish" | "unpublish" | "archive") {
+      const config = useRuntimeConfig()
+      const token = useCookie<string | null>("token")
+
+      this.loading = true
+
+      const { error } = await useFetch(`/hackathons/${hackathonId}/${action}`, {
+        baseURL: config.public.apiBase,
+        method: "PATCH",
+        headers: token.value ? { Authorization: `Bearer ${token.value}` } : undefined
+      })
+
+      this.loading = false
+
+      if (error.value) throw error.value
+      return await this.fetchHackathon(hackathonId)
     },
 
     addEvent(hackathonId: string, event: HackathonEvent) {

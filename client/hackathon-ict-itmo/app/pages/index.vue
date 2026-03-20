@@ -5,8 +5,8 @@
     </Card>
 
     <Table
-      :headers="['Название', 'Тематика', 'Формат']"
-      :rows="hackathons.map(h => [h.name, h.theme, h.format])"
+      :headers="['Название', 'Формат', 'Дата начала', 'Статус']"
+      :rows="hackathons.map(h => [h.title, h.format, h.startDate, h.status])"
       @row-click="goToHackathon"
     />
   </div>
@@ -21,11 +21,14 @@ import Table from '~/components/ui/Table.vue'
 const store = useHackathonStore()
 const router = useRouter()
 
-// захардкожено для текущего пользователя
-const hackathons = store.getHackathons
+onMounted(() => {
+  store.fetchHackathons({ status: "published", page: 1, limit: 10 }).catch((e) => console.error(e))
+})
+
+const hackathons = computed(() => store.getHackathons)
 
 function goToHackathon(row: string[]) {
-  const hackathon = store.hackathons.find(h => h.name === row[0])
+  const hackathon = store.hackathons.find(h => h.title === row[0])
   if (hackathon) router.push(`/hackathon/${hackathon.id}`)
 }
 </script>

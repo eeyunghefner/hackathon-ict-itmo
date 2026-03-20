@@ -10,8 +10,8 @@
 
     <Card>
       <Table
-        :headers="['Название', 'Тематика', 'Формат']"
-        :rows="hackathons.map(h => [h.name, h.theme, h.format])"
+        :headers="['Название', 'Формат', 'Дата начала', 'Статус']"
+        :rows="hackathons.map(h => [h.title, h.format, h.startDate, h.status])"
         @row-click="goToHackathon"
       />
     </Card>
@@ -29,12 +29,15 @@ import { NuxtLink } from '#components'
 const store = useHackathonStore()
 const router = useRouter()
 
-// Получаем все хакатоны организатора с id "1" (захардкожено)
-const hackathons = store.getOrganizerHackathons('1')
+onMounted(() => {
+  store.fetchHackathons({ page: 1, limit: 10 }).catch((e) => console.error(e))
+})
+
+const hackathons = computed(() => store.getHackathons)
 
 // Функция перехода по кликнутой строке таблицы
 function goToHackathon(row: string[]) {
-  const hackathon = hackathons.find(h => h.name === row[0])
+  const hackathon = store.hackathons.find(h => h.title === row[0])
   if (hackathon) router.push(`/org/hackathon/${hackathon.id}`)
 }
 </script>

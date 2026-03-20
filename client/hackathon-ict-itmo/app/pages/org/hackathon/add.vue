@@ -2,15 +2,17 @@
   <Card>
     <h1>Создание хакатона</h1>
 
-    <FormField label="Название" v-model="hackathon.name" type="input" />
+    <FormField label="Название" v-model="hackathon.title" type="input" />
     <FormField label="Тематика" v-model="hackathon.theme" type="input" />
     <FormField label="Формат" v-model="hackathon.format" type="input" />
     <FormField label="Описание" v-model="hackathon.description" type="textarea" />
+    <FormField label="Дата начала (YYYY-MM-DD)" v-model="hackathon.startDate" type="input" />
+    <FormField label="Дата окончания (YYYY-MM-DD)" v-model="hackathon.endDate" type="input" />
     <FormField label="Лимит участников" v-model="hackathon.participantLimit" type="input" />
     <FormField label="Лимит команд" v-model="hackathon.teamLimit" type="input" />
-    <FormField label="Регламент" v-model="hackathon.regulations" type="textarea" />
+    <FormField label="Правила" v-model="hackathon.rules" type="textarea" />
 
-    <Button @tap="create" variant="primary">Создать</Button>
+    <Button @click="create" variant="primary">Создать</Button>
   </Card>
 </template>
 
@@ -21,26 +23,30 @@ import { useHackathonStore } from '~/stores/hackathonStore'
 import Card from '~/components/ui/Card.vue'
 import FormField from '~/components/ui/FormField.vue'
 import Button from '~/components/ui/Button.vue'
-import type { Hackathon } from '../../../../types/hackathon'
+import type { CreateHackathonRequest } from '../../../../types/hackathon'
 
 const store = useHackathonStore()
 const router = useRouter()
 
-const hackathon = ref<Hackathon>({
-  id: Date.now().toString(),
-  name: '',
+const hackathon = ref<CreateHackathonRequest>({
+  title: '',
   theme: '',
   format: 'online',
   description: '',
+  startDate: '',
+  endDate: '',
   participantLimit: 0,
   teamLimit: 0,
-  regulations: '',
-  published: false,
-  organizerId: '1'
+  rules: ''
 })
 
-function create() {
-  store.addHackathon(hackathon.value)
-  router.push(`/org/hackathon/${hackathon.value.id}`)
+async function create() {
+  try {
+    const res = await store.createHackathon(hackathon.value)
+    router.push(`/org/hackathon/${res.id}`)
+  } catch (error) {
+    console.error(error)
+    alert("Не удалось создать хакатон")
+  }
 }
 </script>
