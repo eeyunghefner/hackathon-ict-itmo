@@ -8,8 +8,30 @@
 
         <h3>Участники</h3>
         <ul>
-          <li v-for="m in team.members" :key="m.id">
-            {{ m.name }}
+          <li v-for="m in team.members" :key="m.id" class="member-row">
+            <div class="member-info">
+              <span class="member-name">{{ m.name }}</span>
+              <span v-if="m.id === team.captainId" class="member-role">(капитан)</span>
+            </div>
+
+            <div class="member-actions">
+              <Button
+                variant="secondary"
+                :disabled="excludingMemberId === m.id"
+                @click="excludeMember(m.id)"
+              >
+                Исключить
+              </Button>
+
+              <Button
+                variant="primary"
+                :disabled="m.id === team.captainId || settingCaptainId === m.id"
+                style="margin-left: 0.5rem;"
+                @click="setCaptain(m.id)"
+              >
+                Назначить капитана
+              </Button>
+            </div>
           </li>
         </ul>
 
@@ -53,7 +75,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue"
-import { useRoute } from "vue-router"
+import { useRoute, useRouter } from "vue-router"
 import Card from "~/components/ui/Card.vue"
 import Button from "~/components/ui/Button.vue"
 import { useTeamStore } from "~/stores/teamStore"
@@ -67,6 +89,8 @@ const team = computed(() => store.getTeamById(teamId.value))
 const joinRequests = computed(() => store.getJoinRequests(teamId.value))
 
 const submittingJoin = ref(false)
+const excludingMemberId = ref<string | null>(null)
+const settingCaptainId = ref<string | null>(null)
 
 onMounted(async () => {
   try {
@@ -82,6 +106,39 @@ const router = useRouter()
 
 function apply() {
   router.push({ path: "/hackathons/apply", query: { teamId: teamId.value } })
+}
+
+async function excludeMember(userId: string) {
+  if (excludingMemberId.value) return
+  const ok = window.confirm("Исключить участника из команды?")
+  if (!ok) return
+
+  excludingMemberId.value = userId
+  try {
+    await store.excludeMember(teamId.value, userId)
+    alert("Участник исключен")
+  } catch (e) {
+    console.error(e)
+    alert("Не удалось исключить участника")
+  } finally {
+    excludingMemberId.value = null
+  }
+}
+
+async function setCaptain(userId: string) {
+  console.log(settingCaptainId.value)
+  if (settingCaptainId.value) return
+  settingCaptainId.value = userId
+
+  try {
+    await store.setCaptain(teamId.value, userId)
+    alert("Капитан назначен")
+  } catch (e) {
+    console.error(e)
+    alert("Не удалось назначить капитана")
+  } finally {
+    settingCaptainId.value = null
+  }
 }
 
 async function submitJoin() {
@@ -117,4 +174,30 @@ async function reject(requestId: string) {
   }
 }
 </script>
+
+<style scoped>
+.member-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.member-info {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.member-role {
+  color: var(--color-primary);
+  font-style: normal;
+}
+
+.member-actions {
+  display: flex;
+  align-items: center;
+}
+</style>
 

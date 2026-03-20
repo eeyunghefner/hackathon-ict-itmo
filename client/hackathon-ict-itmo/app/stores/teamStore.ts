@@ -129,9 +129,49 @@ export const useTeamStore = defineStore("teams", {
       // Оптимистично убираем из локального кэша.
       this.teams = this.teams.filter((t) => t.id !== teamId)
       delete this.teamById[teamId]
-    }
+    },
 
-    ,
+    // 5.4 Исключить участника команды
+    async excludeMember(teamId: string, userId: string) {
+      const config = useRuntimeConfig()
+      const token = useCookie<string | null>("token")
+
+      this.loading = true
+
+      const { error } = await useFetch(`/teams/${teamId}/members/${userId}`, {
+        baseURL: config.public.apiBase,
+        method: "DELETE",
+        headers: token.value ? { Authorization: `Bearer ${token.value}` } : undefined
+      })
+
+      this.loading = false
+
+      if (error.value) throw error.value
+
+      // Перезагружаем команду, чтобы обновить список участников и captainId.
+      await this.fetchTeam(teamId)
+    },
+
+    // 5.5 Назначить капитана
+    async setCaptain(teamId: string, userId: string) {
+      const config = useRuntimeConfig()
+      const token = useCookie<string | null>("token")
+
+      this.loading = true
+
+      const { error } = await useFetch(`/teams/${teamId}/captain`, {
+        baseURL: config.public.apiBase,
+        method: "PATCH",
+        body: { userId },
+        headers: token.value ? { Authorization: `Bearer ${token.value}` } : undefined
+      })
+
+      this.loading = false
+
+      if (error.value) throw error.value
+
+      await this.fetchTeam(teamId)
+    },
 
     // 6.1 Подать заявку в команду
     async submitJoinRequest(teamId: string) {
