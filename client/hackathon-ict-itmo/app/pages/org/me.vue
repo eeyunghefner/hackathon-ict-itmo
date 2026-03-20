@@ -7,7 +7,7 @@
       <FormField label="Фамилия" v-model="form.lastName" type="input" />
       <FormField label="Университет" v-model="form.university" type="input" />
       <p>Email: {{ user.email }}</p>
-      <p>Роль: {{ user.role }}</p>
+      <p>Роль: {{ user.roles.join(' ') }}</p>
       <p>Team ID: {{ user.teamId || "—" }}</p>
     </template>
     <p v-else>Профиль не загружен</p>
@@ -35,6 +35,7 @@ onMounted(async () => {
     const profile = await store.fetchMyProfile()
     form.firstName = profile.firstName
     form.lastName = profile.lastName
+    form.university = profile.university
   } catch (error) {
     console.error(error)
     alert("Не удалось загрузить профиль")

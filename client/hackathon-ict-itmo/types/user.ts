@@ -3,8 +3,9 @@ export interface UserProfileResponse {
   firstName: string
   lastName: string
   email: string
-  role: string
+  roles: string []
   teamId: string
+  university: string
 }
 
 export interface UpdateUserProfileRequest {
