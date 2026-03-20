@@ -12,7 +12,7 @@
     </template>
     <p v-else>Профиль не загружен</p>
 
-    <Button @click="save" variant="primary">Сохранить</Button>
+    <Button @tap="save" variant="primary">Сохранить</Button>
   </Card>
 </template>
 

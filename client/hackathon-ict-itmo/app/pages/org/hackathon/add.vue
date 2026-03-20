@@ -10,7 +10,7 @@
     <FormField label="Лимит команд" v-model="hackathon.teamLimit" type="input" />
     <FormField label="Регламент" v-model="hackathon.regulations" type="textarea" />
 
-    <Button @click="create" variant="primary">Создать</Button>
+    <Button @tap="create" variant="primary">Создать</Button>
   </Card>
 </template>
 

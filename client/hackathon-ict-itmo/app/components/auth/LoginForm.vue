@@ -5,7 +5,7 @@
     <FormField label="Email" v-model="email" type="input" />
     <FormField label="Пароль" v-model="password" type="input" />
 
-    <Button @click="submit" variant="primary">
+    <Button @tap="submit" variant="primary">
       Войти
     </Button>
   </Card>
@@ -26,6 +26,7 @@ const password = ref("")
 const router = useRouter()
 
 async function submit() {
+  console.log('Login called')
   try {
     await auth.login(email.value, password.value)
     router.push("/")

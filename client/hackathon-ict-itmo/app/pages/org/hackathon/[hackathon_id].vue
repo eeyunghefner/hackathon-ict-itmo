@@ -3,9 +3,9 @@
     <h1>Редактирование хакатона</h1>
 
     <div>
-      <Button @click="tab = 'info'" variant="secondary" class="right-margin">Общая информация</Button>
-      <Button @click="tab = 'participants'" variant="secondary" class="right-margin">Участники</Button>
-      <Button @click="tab = 'applications'" variant="secondary" class="right-margin">Заявки</Button>
+      <Button @tap="tab = 'info'" variant="secondary" class="right-margin">Общая информация</Button>
+      <Button @tap="tab = 'participants'" variant="secondary" class="right-margin">Участники</Button>
+      <Button @tap="tab = 'applications'" variant="secondary" class="right-margin">Заявки</Button>
     </div>
 
     <Card v-if="tab === 'info'">
@@ -17,7 +17,7 @@
       <FormField label="Лимит команд" v-model="hackathon.teamLimit" type="input" />
       <FormField label="Регламент" v-model="hackathon.regulations" type="textarea" />
 
-      <Button @click="toggle" variant="primary">
+      <Button @tap="toggle" variant="primary">
         {{ hackathon.published ? 'Снять с публикации' : 'Опубликовать' }}
       </Button>
 

@@ -8,7 +8,7 @@
     <FormField label="Фамилия" v-model="lastName" type="input" />
     <FormField label="Университет" v-model="university" type="input" />
 
-    <Button @click="submit" variant="primary">
+    <Button @tap="submit" variant="primary">
       Зарегистрироваться
     </Button>
   </Card>
