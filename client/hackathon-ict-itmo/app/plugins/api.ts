@@ -3,6 +3,7 @@ export default defineNuxtPlugin(() => {
 
   const api = $fetch.create({
     baseURL: config.public.apiBase,
+    credentials: 'include',
     onRequest({ options }) {
       const token = useCookie("token")
 

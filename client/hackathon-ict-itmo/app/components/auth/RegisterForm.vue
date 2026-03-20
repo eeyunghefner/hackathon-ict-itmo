@@ -33,12 +33,14 @@ const router = useRouter()
 
 async function submit() {
   try {
+
     await auth.register({
       email: email.value,
       password: password.value,
       firstName: firstName.value,
       lastName: lastName.value,
-      university: university.value
+      university: university.value,
+      isuNumber: '367800'
     })
 
     router.push("/")

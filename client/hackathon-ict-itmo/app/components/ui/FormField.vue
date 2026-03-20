@@ -2,8 +2,10 @@
   <div class="form-field">
     <label v-if="label">{{ label }}</label>
     <component
-      :is="type || 'input'"
-      v-model="localValue"
+      :is="componentType"
+      :value="modelValue"
+      @input="handleInput"
+      @update:modelValue="handleUpdate"
       v-bind="attrs"
     />
   </div>
@@ -24,8 +26,14 @@ const emit = defineEmits<{
 
 const attrs = useAttrs()
 
-const localValue = computed({
-  get: () => props.modelValue,
-  set: (val) => emit("update:modelValue", val)
-})
+const componentType = computed(() => props.type || 'input')
+
+const handleInput = (event: Event) => {
+  const target = event.target as HTMLInputElement | HTMLTextAreaElement
+  emit('update:modelValue', target.value)
+}
+
+const handleUpdate = (value: string | number) => {
+  emit('update:modelValue', value)
+}
 </script>

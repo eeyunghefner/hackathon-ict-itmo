@@ -4,7 +4,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      apiBase: "http://localhost:3000"
+      apiBase: '/api'
     }
   },
   
@@ -13,6 +13,12 @@ export default defineNuxtConfig({
   modules: ['@pinia/nuxt'],
 
   srcDir: "app",
+
+  routeRules: {
+    '/api/**': {
+      proxy: 'http://localhost:8000/**'
+    }
+  },
 
   css: [
     "@/assets/css/main.css"
