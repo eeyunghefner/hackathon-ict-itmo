@@ -37,7 +37,7 @@ async def _require_event_editor(session: AsyncSession, user_id: int) -> None:
             detail="User not found",
         )
 
-    if user.role_name not in ALLOWED_EVENT_EDITOR_ROLES:
+    if not ALLOWED_EVENT_EDITOR_ROLES.intersection(user.role_names):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have permission to manage events",
