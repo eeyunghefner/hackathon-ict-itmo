@@ -199,7 +199,7 @@ export const useTeamStore = defineStore("teams", {
       if (error.value) throw error.value
 
       // Обновим список заявок на случай, если UI сразу переключится.
-      await this.fetchJoinRequests(teamId)
+      // await this.fetchJoinRequests(teamId)
     },
 
     // 6.2 Получить заявки команды (кастом-данные под UI)
