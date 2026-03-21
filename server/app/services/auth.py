@@ -14,6 +14,7 @@ from app.repositories import (
     create_user_with_password,
     get_auth_user_by_email,
     get_role_by_name,
+    get_user_by_isu_number,
 )
 from app.schemas import (
     AuthUserResponse,
@@ -147,6 +148,19 @@ def build_full_name(first_name: str, last_name: str) -> str:
     return f"{first_name.strip()} {last_name.strip()}".strip()
 
 
+async def _generate_unique_isu_number(session: AsyncSession) -> int:
+    for _ in range(20):
+        candidate = secrets.randbelow(900_000_000) + 100_000_000
+        existing_user = await get_user_by_isu_number(session, candidate)
+        if existing_user is None:
+            return candidate
+
+    raise HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail="Could not generate ISU number",
+    )
+
+
 async def register_user(
     session: AsyncSession,
     payload: RegisterRequest,
@@ -165,10 +179,14 @@ async def register_user(
             detail="Participant role is not configured",
         )
 
+    isu_number = payload.isuNumber
+    if isu_number is None:
+        isu_number = await _generate_unique_isu_number(session)
+
     try:
         user = await create_user_with_password(
             session,
-            isu_number=payload.isuNumber,
+            isu_number=isu_number,
             email=payload.email,
             full_name=build_full_name(payload.firstName, payload.lastName),
             university=payload.university,

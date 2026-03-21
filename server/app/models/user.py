@@ -26,12 +26,21 @@ class User(Base):
         TIMESTAMP, default=datetime.utcnow, onupdate=datetime.utcnow
     )
 
-    roles_association: Mapped[list["Role"]] = relationship(secondary="user_role", back_populates="users_association")
-    authorization_details: Mapped["AuthorizationDetails"] = relationship(
-        back_populates="users"
+    roles_association: Mapped[list["Role"]] = relationship(
+        secondary="user_role",
+        back_populates="users_association",
+        passive_deletes=True,
     )
-    teams: Mapped[list["TeamMember"]] = relationship(back_populates="user")
+    authorization_details: Mapped["AuthorizationDetails"] = relationship(
+        back_populates="users",
+        passive_deletes=True,
+    )
+    teams: Mapped[list["TeamMember"]] = relationship(
+        back_populates="user",
+        passive_deletes=True,
+    )
     captain_teams: Mapped[list["Team"]] = relationship(
         back_populates="captain",
         foreign_keys="Team.captain_id",
+        passive_deletes=True,
     )
