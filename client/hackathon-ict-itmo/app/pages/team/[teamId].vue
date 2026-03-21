@@ -98,7 +98,7 @@ onMounted(async () => {
     await store.fetchJoinRequests(teamId.value)
   } catch (e) {
     console.error(e)
-    alert("Не удалось загрузить данные команды")
+    alert("Вам не доступен просмотр заявок команды, так как вы не капитан!")
   }
 })
 
@@ -158,6 +158,7 @@ async function approve(requestId: string) {
   try {
     await store.approveJoinRequest(requestId, teamId.value)
     alert("Заявка одобрена")
+    await store.fetchTeam(teamId.value)
   } catch (e) {
     console.error(e)
     alert("Не удалось одобрить заявку")
@@ -168,6 +169,7 @@ async function reject(requestId: string) {
   try {
     await store.rejectJoinRequest(requestId, teamId.value)
     alert("Заявка отклонена")
+    await store.fetchTeam(teamId.value)
   } catch (e) {
     console.error(e)
     alert("Не удалось отклонить заявку")
@@ -200,4 +202,3 @@ async function reject(requestId: string) {
   align-items: center;
 }
 </style>
-

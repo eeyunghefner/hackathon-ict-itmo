@@ -40,7 +40,7 @@ async function submit() {
       firstName: firstName.value,
       lastName: lastName.value,
       university: university.value,
-      isuNumber: '367800'
+      isuNumber: '367801'
     })
 
     router.push("/")

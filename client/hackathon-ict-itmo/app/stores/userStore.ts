@@ -14,31 +14,45 @@ export const useUserStore = defineStore("user", {
   },
 
   actions: {
+    // let data = [] as HackathonListItem[]
+        //       try {
+        //         data = await $fetch<HackathonListItem[]>("/hackathons", {
+        //         baseURL: config.public.apiBase,
+        //         method: "GET",
+        //         query,
+        //         headers: token.value ? { Authorization: `Bearer ${token.value}` } : undefined
+        //       })
+        //      } catch (e) {
+        //         throw e
+        //       }
     async fetchMyProfile() {
       const config = useRuntimeConfig()
       const token = useCookie<string | null>("token")
 
       this.loading = true
 
-      const { data, error } = await useFetch<UserProfileResponse>("/users/me", {
+      let data = null as UserProfileResponse | null
+      try {
+        data = await $fetch<UserProfileResponse>("/users/me", {
         baseURL: config.public.apiBase,
+        method: "GET",
         headers: token.value
           ? { Authorization: `Bearer ${token.value}` }
           : undefined
       })
-
+      } catch (e) {
+        return e
+      }
+      
       this.loading = false
 
-      if (error.value) {
-        throw error.value
-      }
 
-      if (!data.value) {
+      if (!data) {
         throw new Error("Profile response is empty")
       }
 
-      this.user = data.value
-      return data.value
+      this.user = data
+      return data
     },
 
     async updateMyProfile(payload: UpdateUserProfileRequest) {

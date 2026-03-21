@@ -52,20 +52,24 @@ export const useTeamStore = defineStore("teams", {
 
       const query = hackathonId ? { hackathonId } : undefined
 
-      const { data, error } = await useFetch<TeamListItem[]>("/teams", {
+      let data = [] as TeamListItem[]
+      try {
+        data = await $fetch<TeamListItem[]>("/teams", {
         baseURL: config.public.apiBase,
         method: "GET",
         query,
         headers: token.value ? { Authorization: `Bearer ${token.value}` } : undefined
       })
-
+      } catch (e) {
+        return e
+      }
+      
       this.loading = false
 
-      if (error.value) throw error.value
-      if (!data.value) throw new Error("Teams response is empty")
+      if (!data) throw new Error("Teams response is empty")
 
-      this.teams = data.value
-      return data.value
+      this.teams = data
+      return data
     },
 
     async fetchTeam(teamId: string) {
@@ -73,20 +77,24 @@ export const useTeamStore = defineStore("teams", {
       const token = useCookie<string | null>("token")
 
       this.loading = true
-
-      const { data, error } = await useFetch<TeamDetail>(`/teams/${teamId}`, {
+      let data = null as TeamDetail | null
+      try {
+        data = await $fetch<TeamDetail>(`/teams/${teamId}`, {
         baseURL: config.public.apiBase,
         method: "GET",
         headers: token.value ? { Authorization: `Bearer ${token.value}` } : undefined
       })
+      } catch (e) {
+        throw e
+      }
+      
 
       this.loading = false
 
-      if (error.value) throw error.value
-      if (!data.value) throw new Error("Team response is empty")
+      if (!data) throw new Error("Team response is empty")
 
-      this.teamById[teamId] = data.value
-      return data.value
+      this.teamById[teamId] = data
+      return data
     },
 
     async createTeam(payload: CreateTeamRequest) {
@@ -201,7 +209,9 @@ export const useTeamStore = defineStore("teams", {
 
       this.loading = true
 
-      const { data, error } = await useFetch<TeamJoinRequest[]>(
+      let data = [] as TeamJoinRequest[]
+      try {
+        data = await $fetch<TeamJoinRequest[]>(
         `/teams/${teamId}/join-requests`,
         {
           baseURL: config.public.apiBase,
@@ -209,14 +219,17 @@ export const useTeamStore = defineStore("teams", {
           headers: token.value ? { Authorization: `Bearer ${token.value}` } : undefined
         }
       )
+      } catch (e) {
+        throw e
+      }
+      
 
       this.loading = false
 
-      if (error.value) throw error.value
-      if (!data.value) throw new Error("Join requests response is empty")
+      if (!data) throw new Error("Join requests response is empty")
 
-      this.joinRequestsByTeamId[teamId] = data.value
-      return data.value
+      this.joinRequestsByTeamId[teamId] = data
+      return data
     },
 
     // 6.3 Принять заявку

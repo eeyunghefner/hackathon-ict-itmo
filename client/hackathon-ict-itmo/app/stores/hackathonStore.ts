@@ -140,25 +140,43 @@ export const useHackathonStore = defineStore("hackathons", {
       return data.value
     },
 
+
+    // try {
+    //     const data = await $fetch<AdminUser[]>("/admin/users", {
+    //       baseURL: config.public.apiBase,
+    //       method: "GET",
+    //       query: { role, page },
+    //       headers: token.value ? { Authorization: `Bearer ${token.value}` } : undefined
+    //     })
+        
+    //     return data ?? []
+    //   } catch (error) {
+    //     throw error
+    //   }
+
     async fetchHackathons(query: GetHackathonsQuery = {}) {
       const config = useRuntimeConfig()
       const token = useCookie<string | null>("token")
 
       this.loading = true
-
-      const { data, error } = await useFetch<HackathonListItem[]>("/hackathons", {
+      let data = [] as HackathonListItem[]
+      try {
+        data = await $fetch<HackathonListItem[]>("/hackathons", {
         baseURL: config.public.apiBase,
+        method: "GET",
         query,
         headers: token.value ? { Authorization: `Bearer ${token.value}` } : undefined
       })
+     } catch (e) {
+        throw e
+      }
 
       this.loading = false
 
-      if (error.value) throw error.value
-      if (!data.value) throw new Error("Hackathons list response is empty")
+      if (!data) throw new Error("Hackathons list response is empty")
 
-      this.hackathons = data.value
-      return data.value
+      this.hackathons = data
+      return data
     },
 
     async fetchHackathon(hackathonId: string) {
@@ -167,18 +185,23 @@ export const useHackathonStore = defineStore("hackathons", {
 
       this.loading = true
 
-      const { data, error } = await useFetch<HackathonDetail>(`/hackathons/${hackathonId}`, {
+      let data = null as HackathonDetail | null
+      try {
+        data = await $fetch<HackathonDetail>(`/hackathons/${hackathonId}`, {
+        method: "GET",
         baseURL: config.public.apiBase,
         headers: token.value ? { Authorization: `Bearer ${token.value}` } : undefined
       })
-
+      } catch (e) {
+        throw e
+      }
+      
       this.loading = false
 
-      if (error.value) throw error.value
-      if (!data.value) throw new Error("Hackathon response is empty")
+      if (!data) throw new Error("Hackathon response is empty")
 
-      this.hackathonById[hackathonId] = data.value
-      return data.value
+      this.hackathonById[hackathonId] = data
+      return data
     },
 
     async updateHackathon(hackathonId: string, payload: UpdateHackathonRequest) {
@@ -258,8 +281,9 @@ export const useHackathonStore = defineStore("hackathons", {
       const token = useCookie<string | null>("token")
 
       this.loading = true
-
-      const { data, error } = await useFetch<HackathonApplication[]>(
+      let data = [] as HackathonApplication[]
+      try {
+        data = await $fetch<HackathonApplication[]>(
         `/hackathons/${hackathonId}/applications`,
         {
           baseURL: config.public.apiBase,
@@ -267,14 +291,17 @@ export const useHackathonStore = defineStore("hackathons", {
           headers: token.value ? { Authorization: `Bearer ${token.value}` } : undefined
         }
       )
+      } catch (e) {
+        throw e
+      }
+      
 
       this.loading = false
 
-      if (error.value) throw error.value
-      if (!data.value) throw new Error("Hackathon applications response is empty")
+      if (!data) throw new Error("Hackathon applications response is empty")
 
-      this.hackathonApplications[hackathonId] = data.value
-      return data.value
+      this.hackathonApplications[hackathonId] = data
+      return data
     },
 
     // 4.3 Одобрить заявку
@@ -321,8 +348,9 @@ export const useHackathonStore = defineStore("hackathons", {
       const token = useCookie<string | null>("token")
 
       this.loading = true
-
-      const { data, error } = await useFetch<HackathonEvent[]>(
+      let data = [] as HackathonEvent[]
+      try {
+        data = await $fetch<HackathonEvent[]>(
         `/hackathons/${hackathonId}/events`,
         {
           baseURL: config.public.apiBase,
@@ -330,11 +358,13 @@ export const useHackathonStore = defineStore("hackathons", {
           headers: token.value ? { Authorization: `Bearer ${token.value}` } : undefined
         }
       )
+      } catch (e) {
+        throw e
+      }
 
       this.loading = false
 
-      if (error.value) throw error.value
-      this.schedules[hackathonId] = data.value ?? []
+      this.schedules[hackathonId] = data ?? []
       return this.schedules[hackathonId]
     },
 
@@ -344,8 +374,9 @@ export const useHackathonStore = defineStore("hackathons", {
       const token = useCookie<string | null>("token")
 
       this.loading = true
-
-      const { data, error } = await useFetch<HackathonStats>(
+      let data = null as HackathonStats | null
+      try {
+        data = await $fetch<HackathonStats>(
         `/hackathons/${hackathonId}/stats`,
         {
           baseURL: config.public.apiBase,
@@ -353,14 +384,17 @@ export const useHackathonStore = defineStore("hackathons", {
           headers: token.value ? { Authorization: `Bearer ${token.value}` } : undefined
         }
       )
+      } catch (e) {
+        throw e
+      }
+      
 
       this.loading = false
 
-      if (error.value) throw error.value
-      if (!data.value) throw new Error("Hackathon stats response is empty")
+      if (!data) throw new Error("Hackathon stats response is empty")
 
-      this.stats[hackathonId] = data.value
-      return data.value
+      this.stats[hackathonId] = data
+      return data
     },
 
     // 9.1 Добавить событие
