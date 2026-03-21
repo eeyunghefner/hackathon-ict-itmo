@@ -12,4 +12,7 @@ class AuthorizationDetails(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
 
-    users: Mapped[list["User"]] = relationship(back_populates="authorization_details")
+    users: Mapped[list["User"]] = relationship(
+        back_populates="authorization_details",
+        passive_deletes=True,
+    )

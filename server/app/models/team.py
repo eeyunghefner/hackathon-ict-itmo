@@ -30,6 +30,15 @@ class Team(Base):
         back_populates="captain_teams",
         foreign_keys=[captain_id],
     )
-    applications: Mapped[list["Application"]] = relationship(back_populates="team")
-    join_requests: Mapped[list["TeamRequest"]] = relationship(back_populates="team")
-    members: Mapped[list["TeamMember"]] = relationship(back_populates="team")
+    applications: Mapped[list["Application"]] = relationship(
+        back_populates="team",
+        passive_deletes=True,
+    )
+    join_requests: Mapped[list["TeamRequest"]] = relationship(
+        back_populates="team",
+        passive_deletes=True,
+    )
+    members: Mapped[list["TeamMember"]] = relationship(
+        back_populates="team",
+        passive_deletes=True,
+    )

@@ -42,7 +42,12 @@ async def create_hackathon(
     return await create_hackathon_entry(session, current_user_id, payload)
 
 
-@router.post("/{hackathon_id}/events", response_model=EventResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{hackathon_id}/events",
+    response_model=EventResponse,
+    status_code=status.HTTP_201_CREATED,
+    tags=["events"],
+)
 async def create_event_for_hackathon(
     hackathon_id: int,
     payload: CreateEventRequest,
@@ -100,7 +105,11 @@ async def read_hackathon_applications(
     )
 
 
-@router.get("/{hackathon_id}/events", response_model=list[EventResponse])
+@router.get(
+    "/{hackathon_id}/events",
+    response_model=list[EventResponse],
+    tags=["events"],
+)
 async def read_hackathon_events(
     hackathon_id: int,
     session: AsyncSession = Depends(get_async_session),
