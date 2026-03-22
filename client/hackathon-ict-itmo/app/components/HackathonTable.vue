@@ -3,12 +3,9 @@
     <thead>
       <tr>
         <th>Название</th>
-        <th>Тематика</th>
         <th>Формат</th>
-        <th>Описание</th>
-        <th>Лимит участников</th>
-        <th>Лимит команд</th>
-        <th>Регламент</th>
+        <th>Дата начала</th>
+        <th>Статус</th>
       </tr>
     </thead>
 
@@ -18,23 +15,20 @@
         :key="hackathon.id"
         @click="goToHackathon(hackathon.id)"
       >
-        <td>{{ hackathon.name }}</td>
-        <td>{{ hackathon.theme }}</td>
+        <td>{{ hackathon.title }}</td>
         <td>{{ hackathon.format }}</td>
-        <td>{{ hackathon.description }}</td>
-        <td>{{ hackathon.participantLimit }}</td>
-        <td>{{ hackathon.teamLimit }}</td>
-        <td>{{ hackathon.regulations }}</td>
+        <td>{{ hackathon.startDate }}</td>
+        <td>{{ hackathon.status }}</td>
       </tr>
     </tbody>
   </table>
 </template>
 
 <script setup lang="ts">
-import type { Hackathon } from "../../types/hackathon"
+import type { HackathonListItem } from "../../types/hackathon"
 
 const props = defineProps<{
-  hackathons: Hackathon[]
+  hackathons: HackathonListItem[]
 }>()
 
 const router = useRouter()

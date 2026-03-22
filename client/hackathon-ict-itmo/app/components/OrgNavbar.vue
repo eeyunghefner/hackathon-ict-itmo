@@ -2,6 +2,7 @@
   <div>
     <NuxtLink to="/org" class="right-margin">Мои хакатоны</NuxtLink>
     <NuxtLink to="/org/me" class="right-margin">Личный кабинет</NuxtLink>
+    <NuxtLink to="/admin" class="right-margin">Администрирование</NuxtLink>
   </div>
 </template>
 

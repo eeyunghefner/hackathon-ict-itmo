@@ -10,10 +10,14 @@
 
     <tbody>
       <tr v-for="team in teams" :key="team.id">
-        <td>{{ team.name }}</td>
-        <td>{{ team.members }}</td>
         <td>
-          <button @click="apply(team.id)">Подать заявку</button>
+          <NuxtLink :to="`/team/${team.id}`">{{ team.name }}</NuxtLink>
+        </td>
+        <td>{{ getTeamMembersCount(team) }}</td>
+        <td>
+          <button @click="submit(team.id)" :disabled="submittingId === team.id">
+            {{ submittingId === team.id ? "Отправка..." : "Подать заявку в команду" }}
+          </button>
         </td>
       </tr>
     </tbody>
@@ -21,13 +25,27 @@
 </template>
 
 <script setup lang="ts">
-import type { Team } from "../../types/team"
+import { ref } from "vue"
+import { getTeamMembersCount, type TeamListItem } from "../../types/team"
+import { useTeamStore } from "~/stores/teamStore"
 
 defineProps<{
-  teams: Team[]
+  teams: TeamListItem[]
 }>()
 
-function apply(id: string) {
-  console.log("Apply to team", id)
+const store = useTeamStore()
+const submittingId = ref<string | null>(null)
+
+async function submit(teamId: string) {
+  try {
+    submittingId.value = teamId
+    await store.submitJoinRequest(teamId)
+    alert("Заявка отправлена")
+  } catch (e) {
+    console.error(e)
+    alert("Не удалось отправить заявку")
+  } finally {
+    submittingId.value = null
+  }
 }
 </script>

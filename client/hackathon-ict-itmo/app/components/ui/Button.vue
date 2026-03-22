@@ -1,8 +1,9 @@
 <template>
   <button
+    type="button"
     :class="variant"
     :disabled="disabled"
-    @click="$emit('click')"
+    @click="$emit('tap')"
   >
     <slot />
   </button>
